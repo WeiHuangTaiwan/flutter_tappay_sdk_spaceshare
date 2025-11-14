@@ -96,6 +96,8 @@ class FlutterTapPaySdk {
       dueMonth: dueMonth,
       dueYear: dueYear,
       cvv: cvv,
+      // forward the sandbox flag down to platform implementation
+      isSandbox: isSandbox,
     );
   }
 
@@ -297,6 +299,7 @@ class FlutterTapPaySdk {
         dueMonth: dueMonth!,
         dueYear: dueYear!,
         cvv: cvv!,
+        isSandbox: isSandbox,
       );
       if (primeRes?.success != true) {
         throw Exception('getCardPrime failed: ${primeRes?.message}');
