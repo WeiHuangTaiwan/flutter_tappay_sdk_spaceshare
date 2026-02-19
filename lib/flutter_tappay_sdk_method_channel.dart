@@ -1,3 +1,4 @@
+// lib/flutter_tappay_sdk_method_channel.dart
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -10,6 +11,9 @@ import 'models/tappay_prime.dart';
 import 'tappay/auth_methods.dart';
 import 'tappay/card_type.dart';
 import 'tappay/cart_item.dart';
+
+import 'models/tappay_cardholder.dart';
+import 'models/cardholder_prime_result.dart';
 
 /// An implementation of [FlutterTapPaySdkPlatform] that uses method channels.
 class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
@@ -71,18 +75,24 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
     required String dueMonth,
     required String dueYear,
     required String cvv,
-    /// true→sandbox, false→production
     bool isSandbox = false,
+    Map<String, dynamic>? cardholder,
   }) async {
-    final result = await methodChannel
-        .invokeMethod<Map<Object?, Object?>>('getPrimeByCardInfo', {
+    final args = <String, dynamic>{
       'cardNumber': cardNumber,
       'mm': dueMonth,
       'yy': dueYear,
       'cvv': cvv,
-      /// true→sandbox, false→production
       'isSandbox': isSandbox,
-    });
+    };
+    if (cardholder != null) {
+      args['cardholder'] = cardholder;
+    }
+
+    final result = await methodChannel.invokeMethod<Map<Object?, Object?>>(
+      'getPrimeByCardInfo',
+      args,
+    );
 
     if (result == null) {
       return TapPayPrime(
@@ -276,5 +286,38 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
       return TapPaySdkCommonResult.fromMap(
           Map<String, dynamic>.from(applePayResult));
     }
+  }
+
+  /// New: request web/native to return prime + cardholder info (if available)
+  @override
+  Future<CardholderPrimeResult?> getCardholderInfoPrime() async {
+    final result =
+        await methodChannel.invokeMethod<Map<Object?, Object?>>('getCardholderInfoPrime');
+
+    if (result == null) {
+      return CardholderPrimeResult(success: false);
+    } else {
+      return CardholderPrimeResult.fromMap(Map<String, dynamic>.from(result));
+    }
+  }
+
+  /// Web-specific setup & getPrime are implemented by Flutter web plugin subclass.
+  @override
+  Future<void> setupSDK({
+    required int appId,
+    required String appKey,
+    required String serverType,
+  }) {
+    throw UnimplementedError('setupSDK() is only available on web implementation.');
+  }
+
+  @override
+  Future<String> getDeviceId() {
+    throw UnimplementedError('getDeviceId() is only available on web implementation.');
+  }
+
+  @override
+  Future<String> getPrime() {
+    throw UnimplementedError('getPrime() is only available on web implementation.');
   }
 }
