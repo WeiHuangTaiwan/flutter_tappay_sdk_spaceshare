@@ -83,10 +83,27 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         val expiryMonth: String? = call.argument<String?>("mm")
         val expiryYear: String? = call.argument<String?>("yy")
         val cvv: String? = call.argument<String?>("cvv")
+        // NEW: read optional cardholder map from Dart
+        val cardholderMap: HashMap<String, Any?>? = call.argument<HashMap<String, Any?>>("cardholder")
 
-        createTokenByCardInfo(carNumber, expiryMonth, expiryYear, cvv, onResult = {
+        createTokenByCardInfo(carNumber, expiryMonth, expiryYear, cvv, cardholderMap, onResult = {
           result.success(it)
         })
+      }
+
+      // New: get cardholder-info prime (native fallback)
+      "getCardholderInfoPrime" -> {
+        // At native layer we currently require card info to generate prime.
+        // Since Dart's getCardholderInfoPrime() on native path doesn't supply card info,
+        // we respond with informative message. If you want native to produce cardholder-prime
+        // without card info, implement the SDK-specific flow here.
+        val response = HashMap<String, Any?>()
+        response["success"] = false
+        response["status"] = null
+        response["message"] = "getCardholderInfoPrime is not implemented on Android without card info. Use getCardPrime with cardholder parameter."
+        response["prime"] = null
+        response["cardholder"] = null
+        result.success(response)
       }
 
       "initGooglePay" -> {
@@ -181,10 +198,13 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   /**
    * Create token (prime)
+   *
+   * Modified to accept optional cardholder HashMap and echo it in the success result.
    */
   private fun createTokenByCardInfo(
     cardNumber: String?, expiryMonth: String?, expiryYear: String?,
-    cvv: String?, onResult: (HashMap<String, Any?>) -> (Unit)
+    cvv: String?, cardholder: HashMap<String, Any?>?,
+    onResult: (HashMap<String, Any?>) -> (Unit)
   ) {
     if (cardNumber.isNullOrEmpty() || expiryMonth.isNullOrEmpty() || expiryYear.isNullOrEmpty() ||
       cvv.isNullOrEmpty()
@@ -203,11 +223,27 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     val tpdCard = TPDCard(
       context, StringBuffer(cardNumber), StringBuffer(expiryMonth),
       StringBuffer(expiryYear), StringBuffer(cvv)
-    ).onSuccessCallback { prime, _, _, _ ->
-      onResult(CreateCardTokenByCardInfoResult(true, null, null, prime).toHashMap())
+    ).onSuccessCallback { prime, _, _, cardInfo ->
+      val resultMap = CreateCardTokenByCardInfoResult(true, null, null, prime).toHashMap()
+
+      // If caller provided cardholder map, include it in returned map so Dart/server can see it.
+      if (cardholder != null) {
+        resultMap["cardholder"] = cardholder
+      } else {
+        // If SDK provides cardholder in cardInfo, you may parse it here.
+        // Example (pseudocode):
+        // val returned = parseCardInfoCardholder(cardInfo)
+        // if (returned != null) resultMap["cardholder"] = returned
+      }
+
+      onResult(resultMap)
     }.onFailureCallback { status, reportMsg ->
       onResult(CreateCardTokenByCardInfoResult(false, status, reportMsg, null).toHashMap())
     }
+
+    // If TapPay Android SDK supports passing cardholder into the token creation call,
+    // you would add that here (example comment):
+    // tpdCard.setCardholderInfo(...)
 
     tpdCard.createToken("UNKNOWN")
   }
