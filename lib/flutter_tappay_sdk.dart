@@ -1,3 +1,4 @@
+// lib/flutter_tappay_sdk.dart
 import 'package:flutter/foundation.dart'; // 用來判斷 kIsWeb
 import 'package:flutter_tappay_sdk/models/tappay_prime.dart';
 
@@ -8,6 +9,8 @@ import 'tappay/auth_methods.dart';
 import 'tappay/card_type.dart';
 import 'tappay/cart_item.dart';
 
+import 'models/cardholder_prime_result.dart';
+import 'models/tappay_cardholder.dart';
 
 class FlutterTapPaySdk {
   /// To get the native SDK version
@@ -76,6 +79,10 @@ class FlutterTapPaySdk {
   /// [dueYear] is the year of the card's expiration date
   /// [cvv] is the card's CVV(Card Verification Value)
   ///
+  /// [isSandbox] true for sandbox/testing, false for production
+  ///
+  /// Optional: [cardholder] — 若想同時在 native 路徑送出持卡人資訊（或做 client-side 的 prefill），可以傳入此參數。
+  ///
   /// return [TapPayPrime] with value [success] as [true] if success.
   /// return [TapPayPrime] with value [success] as [false] if fail.
   /// return [TapPayPrime] with value [status] as [int] if fail. (The value of [status] is defined by TapPay.)
@@ -90,6 +97,8 @@ class FlutterTapPaySdk {
     required String cvv,
     /// true for sandbox/testing, false for production
     bool isSandbox = false,
+    /// Optional: 若想同時送持卡人資訊（native / web），傳入 TapPayCardholder
+    TapPayCardholder? cardholder,
   }) {
     return FlutterTapPaySdkPlatform.instance.getCardPrime(
       cardNumber: cardNumber,
@@ -98,6 +107,7 @@ class FlutterTapPaySdk {
       cvv: cvv,
       // forward the sandbox flag down to platform implementation
       isSandbox: isSandbox,
+      cardholder: cardholder?.toMap(),
     );
   }
 
@@ -228,7 +238,8 @@ class FlutterTapPaySdk {
   Future<TapPaySdkCommonResult?> applePayResult({required bool result}) {
     return FlutterTapPaySdkPlatform.instance.applePayResult(result: result);
   }
-    /// Setup Web TapPay SDK (TPDirect.setupSDK)
+
+  /// Setup Web TapPay SDK (TPDirect.setupSDK)
   ///
   /// [serverType] is 'sandbox' or 'production'
   static Future<void> setupWebSDK({
@@ -256,7 +267,8 @@ class FlutterTapPaySdk {
   static Future<String> getWebDeviceId() {
     return FlutterTapPaySdkPlatform.instance.getDeviceId();
   }
-    /// Unified Prime 取得入口，Web / Native 一次搞定
+
+  /// Unified Prime 取得入口，Web / Native 一次搞定
   ///
   /// - Web: 只需要 appId/appKey/serverType
   /// - Native: 需要 appId/appKey/isSandbox + 卡號資訊
@@ -309,6 +321,41 @@ if (prime == null || prime.isEmpty) {
   throw Exception('getCardPrime failed: prime is null');
 }
 return prime;
+    }
+  }
+
+  /// 取得 prime 並 (若可得) 一併回傳持卡人資訊（CardholderPrimeResult）
+  ///
+  /// - Web 會呼叫 TPDirect.card.getPrime 的 extended 版本 (web impl)
+  /// - Native 則先 initTapPay 再呼叫 platform 的 getCardholderInfoPrime()
+  Future<CardholderPrimeResult?> getCardholderInfoPrime({
+    required int appId,
+    required String appKey,
+    bool isSandbox = false,
+  }) async {
+    if (kIsWeb) {
+      // web: 初始化 web SDK 再呼叫 platform impl
+      await setupWebSDK(
+        appId: appId,
+        appKey: appKey,
+        serverType: isSandbox ? 'sandbox' : 'production',
+      );
+      return FlutterTapPaySdkPlatform.instance.getCardholderInfoPrime();
+    } else {
+      // native: 先初始化 native SDK
+      final initRes = await FlutterTapPaySdkPlatform.instance.initTapPay(
+        appId: appId,
+        appKey: appKey,
+        isSandbox: isSandbox,
+      );
+      if (initRes?.success != true) {
+        // 回傳一個失敗的結果
+        return CardholderPrimeResult(success: false, message: initRes?.message);
+      }
+
+      // 呼叫 native 平台去產生 prime 並讀取 cardholder info（native 端需實作該方法）
+      final res = await FlutterTapPaySdkPlatform.instance.getCardholderInfoPrime();
+      return res;
     }
   }
 }
