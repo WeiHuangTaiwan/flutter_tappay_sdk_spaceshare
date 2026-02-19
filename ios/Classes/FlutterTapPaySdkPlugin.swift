@@ -1,229 +1,151 @@
+// ios/Classes/FlutterTapPaySdkPlugin.swift
 import Flutter
 import UIKit
 import TPDirect
-import PassKit
 
 public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
-  
-  var applePayHandler: ApplePayHandler
-  
-  override init() {
-    applePayHandler = ApplePayHandler()
-  }
-  
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_tappay_sdk", binaryMessenger: registrar.messenger())
     let instance = FlutterTapPaySdkPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
-  
+
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    let args = call.arguments as? [String: Any]
+
     switch call.method {
     case "sdkVersion":
-      result(TPDSetup.version())
-    case "initPayment":
-      guard let args = call.arguments as? [String:Any] else {
-        print("Missing required parameters for \"initPayment\" method.")
-        result(TapPaySdkCommonResult(success: false, message: "args cast error").toDictionary())
-        return
-      }
-      
-      let appId = args["appId"] as? Int32
-      let appKey = args["appKey"] as? String
-      let isSandbox = (args["isSandbox"] as? Bool ?? false)
-      
-      initTapPay(appId: appId, appKey: appKey, isSandbox: isSandbox, onResult: {
-        response in result(response)
-      })
-      
-    case "isValidCard":
-      guard let args = call.arguments as? [String:Any] else {
-        print("Missing required parameters for \"isValidCard\" method.")
-        result(false)
-        return
-      }
-      
-      let carNumber = args["cardNumber"] as? String
-      let expiryMonth = args["mm"] as? String
-      let expiryYear = args["yy"] as? String
-      let cvv = args["cvv"] as? String
-      
-      result(validateCard(cardNumber: carNumber, expiryMonth: expiryMonth, expiryYear: expiryYear, cvv: cvv))
-      
-    case "getPrimeByCardInfo":
-      guard let args = call.arguments as? [String:Any] else {
-        print("Missing required parameters for \"getPrimeByCardInfo\" method.")
-        result(CreateCardTokenByCardInfoResult(success: false, status: nil, message: "Missing required parameters for \"getPrimeByCardInfo\" method.", prime: nil).toDictionary())
-        return
-      }
-      
-      let cardNumber = args["cardNumber"] as? String //carNumber --> cardNumber
-      let expiryMonth = args["mm"] as? String
-      let expiryYear = args["yy"] as? String
-      let cvv = args["cvv"] as? String
-      //Debug 用 --------------------------------------------------------------------------------------
-      let isSandbox = args["isSandbox"] as? Bool ?? false
-      NSLog("[iOS] getPrimeByCardInfo → cardNumber: \(cardNumber ?? ""), isSandbox: \(isSandbox)")
-      //Debug 用 --------------------------------------------------------------------------------------
+      result(TPDSetup.getVersion())
 
-      //carNumber --> cardNumber
-      createTokenByCardInfo(cardNumber: cardNumber, expiryMonth: expiryMonth, expiryYear: expiryYear, cvv: cvv) {
-        response in result(response) 
+    case "initPayment":
+      let appId = args?["appId"] as? Int
+      let appKey = args?["appKey"] as? String
+      let isSandbox = args?["isSandbox"] as? Bool ?? false
+
+      initTapPay(appId: appId, appKey: appKey, isSandbox: isSandbox) { res in
+        result(res)
       }
-      
-    case "initApplePay":
-      guard let args = call.arguments as? [String:Any] else {
-        print("Missing required parameters for \"initApplePay\" method.")
-        result(TapPaySdkCommonResult(success: false, message: "Missing required parameters for \"initApplePay\" method.").toDictionary())
-        return
+
+    case "isValidCard":
+      let cardNumber = args?["cardNumber"] as? String
+      let mm = args?["mm"] as? String
+      let yy = args?["yy"] as? String
+      let cvv = args?["cvv"] as? String
+      let ok = validateCard(cardNumber: cardNumber, expiryMonth: mm, expiryYear: yy, cvv: cvv)
+      result(ok)
+
+    case "getPrimeByCardInfo":
+      let cardNumber = args?["cardNumber"] as? String
+      let mm = args?["mm"] as? String
+      let yy = args?["yy"] as? String
+      let cvv = args?["cvv"] as? String
+      let cardholder = args?["cardholder"] as? [String:Any]
+
+      createTokenByCardInfo(cardNumber: cardNumber, expiryMonth: mm, expiryYear: yy, cvv: cvv, cardholder: cardholder) { res in
+        result(res)
       }
-      
-      initApplePay(
-        merchantId: args["merchantId"] as? String,
-        merchantName: args["merchantName"] as? String,
-        cardTypes: args["cardTypes"] as? [String],
-        isConsumerNameRequired: args["isConsumerNameRequired"] as? Bool,
-        isPhoneNumberRequired: args["isPhoneNumberRequired"] as? Bool,
-        isBillingAddressRequired: args["isBillingAddressRequired"] as? Bool,
-        isEmailRequired: args["isEmailRequired"] as? Bool
-      ) {
-        response in result(response)
-      }
-      
-    case "requestApplePay":
-      guard let args = call.arguments as? [String:Any] else {
-        print("Missing required parameters for \"requestApplePay\" method.")
-        result(TapPaySdkCommonResult(success: false, message: "Missing required parameters for \"requestApplePay\" method.").toDictionary())
-        return
-      }
-      
-      requestApplePay(
-        cartItems: args["cartItems"] as? [[String: Any]],
-        currencyCode: args["currencyCode"] as? String,
-        countryCode: args["countryCode"] as? String
-      ) {
-        response in result(response)
-      }
-      
-    case "applePayResult":
-      guard let args = call.arguments as? [String:Any] else {
-        print("Missing required parameters for \"appPayResult\" method.")
-        result(TapPaySdkCommonResult(success: false, message: "Missing required parameters for \"appPayResult\" method.").toDictionary())
-        return
-      }
-      
-      if let resultValue = args["result"] as? Bool {
-        let response = applePayHandler.applePayResult(result: resultValue)
-        result(response.toDictionary())
-      } else {
-        result(TapPaySdkCommonResult(success: false, message: "Missing required \"result\" for \"appPayResult\" method.").toDictionary())
-      }
-      
+
+    case "getCardholderInfoPrime":
+      // Native iOS: we currently expect card info to generate prime.
+      // If you require iOS to support a different flow (e.g., a specific SDK call to return cardholder prime),
+      // implement it here. For now we return an informative response, instructing to use getPrimeByCardInfo.
+      let response: [String: Any?] = [
+        "success": false,
+        "status": nil,
+        "message": "getCardholderInfoPrime is not implemented on iOS without card info. Use getCardPrime with cardholder parameter.",
+        "prime": nil,
+        "cardholder": nil
+      ]
+      result(response)
+
+    case "initGooglePay":
+      // Not implemented on iOS (Google Pay is Android-only)
+      let res: [String: Any?] = [
+        "success": false,
+        "message": "Google Pay is only available on Android."
+      ]
+      result(res)
+
+    case "requestGooglePay":
+      let res: [String: Any?] = [
+        "success": false,
+        "message": "Google Pay is only available on Android."
+      ]
+      result(res)
+
     default:
       result(FlutterMethodNotImplemented)
     }
   }
-  
-  private func initTapPay(appId: Int32?, appKey: String?, isSandbox: Bool?, onResult: @escaping([String: Any?]) -> Void) {
-    if (appId == nil || appKey == nil || appKey == "") {
-      let error = TapPaySdkCommonResult(success: false, message: "\"appId\" and \"appKey\" are required.")
-      onResult(error.toDictionary())
-      return
-    }
-    
-    let serverType: TPDServerType = isSandbox == true ?
-    TPDServerType.sandBox : TPDServerType.production
 
-    //Debug 用 -------------------------------------------------------------------------------------- 
-     NSLog("[TapPay] initTapPay → serverType: %@, appId:%d",
-      serverType == .sandBox ? "Sandbox" : "Production", appId!)
-    //Debug 用 --------------------------------------------------------------------------------------
-    
-    TPDSetup.setWithAppId(appId!, withAppKey: appKey!, with: serverType)
-    
-    let result = TapPaySdkCommonResult(success: true, message: nil)
-    onResult(result.toDictionary())
+  // MARK: - Init TapPay
+  private func initTapPay(appId: Int?, appKey: String?, isSandbox: Bool, onResult: @escaping ([String:Any?]) -> Void) {
+    guard let appId = appId, let appKey = appKey else {
+      onResult(["success": false, "message": "\"appId\" and \"appKey\" are required."])
+      return
+    }
+
+    let serverType: TPDServerType = isSandbox ? .sandbox : .production
+    // TPDSetup init
+    TPDSetup.initInstance(withAppId: Int32(appId), withAppKey: appKey, with: serverType)
+
+    onResult(["success": true, "message": nil])
   }
-  
+
+  // MARK: - Validate Card
   private func validateCard(cardNumber: String?, expiryMonth: String?, expiryYear: String?, cvv: String?) -> Bool {
-    if (cardNumber == nil || expiryMonth == nil || expiryYear == nil || cvv == nil) {
+    guard let cardNumber = cardNumber, let mm = expiryMonth, let yy = expiryYear, let cvv = cvv else {
       return false
     }
-    
-    guard let result = TPDCard.validate(withCardNumber: cardNumber!, withDueMonth: expiryMonth!, withDueYear: expiryYear!, withCCV: cvv!) else {
-      return false
-    }
-    
-    return result.isCardNumberValid && result.isExpiryDateValid && result.isCCVValid
+    // TPDCard.validate returns TPDCardValidationResult on iOS
+    let validation = TPDCard.validate(with: cardNumber, withDueMonth: mm, withDueYear: yy, withCCV: cvv)
+    return (validation?.isCardNumberValid ?? false) && (validation?.isExpiryDateValid ?? false) && (validation?.isCCVValid ?? false)
   }
-  
-  private func createTokenByCardInfo(cardNumber: String?, expiryMonth: String?, expiryYear: String?, cvv: String?, onResult: @escaping([String: Any?]) -> Void) {
-    if (cardNumber == nil || expiryMonth == nil || expiryYear == nil || cvv == nil) {
-      onResult(CreateCardTokenByCardInfoResult(success: false, status: nil, message: "Missing required parameters for \"getPrimeByCardInfo\" method.", prime: nil).toDictionary())
+
+  // MARK: - Create Token by Card Info (getPrimeByCardInfo)
+  private func createTokenByCardInfo(cardNumber: String?, expiryMonth: String?, expiryYear: String?, cvv: String?, cardholder: [String:Any]?, onResult: @escaping ([String:Any?]) -> Void) {
+    guard let cardNumber = cardNumber, let expiryMonth = expiryMonth, let expiryYear = expiryYear, let cvv = cvv else {
+      let res = CreateCardTokenByCardInfoResult(success: false, status: nil, message: "Missing required parameters for \"getPrimeByCardInfo\" method.", prime: nil)
+      onResult(res.toDictionary())
       return
     }
-    
-    TPDCard.setWithCardNumber(cardNumber!, withDueMonth: expiryMonth!, withDueYear: expiryYear!, withCCV: cvv!)
-      .onSuccessCallback { (prime, cardInfo, cardIdentifier, merchantReferenceInfo) in
-        onResult(CreateCardTokenByCardInfoResult(success: true, status: nil, message: nil, prime: prime).toDictionary())
-      }
-      .onFailureCallback { (status, message) in
-        onResult(CreateCardTokenByCardInfoResult(success: false, status: status, message: message, prime: nil).toDictionary())
-      }
-      .createToken(withGeoLocation: "UNKNOWN")
-  }
-  
-  private func initApplePay(
-    merchantId: String? = nil,
-    merchantName: String? = nil,
-    cardTypes: [String]? = ["visa", "masterCard", "amex", "jcb"],
-    isConsumerNameRequired: Bool? = false,
-    isPhoneNumberRequired: Bool? = false,
-    isBillingAddressRequired: Bool? = false,
-    isEmailRequired: Bool? = false,
-    onResult: @escaping ([String: Any?]) -> Void
-  ) {
-    if (merchantName == nil) {
-      onResult(TapPaySdkCommonResult(success: false, message: "Missing required parameters \"merchantName\" for \"initApplePay\" method.").toDictionary())
-      return
-    }
-    
-    let callbackDelegate: (TapPaySdkCommonResult) -> Void = { result in
-      onResult(result.toDictionary())
-    }
-    
-    applePayHandler.initApplePay(
-      merchantId: merchantId,
-      merchantName: merchantName,
-      cardTypes: cardTypes,
-      isConsumerNameRequired: isConsumerNameRequired,
-      isPhoneNumberRequired: isPhoneNumberRequired,
-      isBillingAddressRequired: isBillingAddressRequired,
-      isEmailRequired: isEmailRequired,
-      onApplePayCheck: callbackDelegate
-    )
-  }
-  
-  private func requestApplePay(
-    cartItems: [[String: Any]]? = nil,
-    currencyCode: String? = nil,
-    countryCode: String? = nil,
-    onResult: @escaping ([String: Any?]) -> Void
-  ) {
-    if (cartItems == nil || currencyCode == nil || countryCode == nil) {
-      onResult(TapPaySdkCommonResult(success: false, message: "Missing required parameters for \"requestApplePay\" method.").toDictionary())
-      return
-    }
-    
-    let callbackDelegate: (ApplePayPaymentResult) -> Void = { result in
-      onResult(result.toDictionary())
-    }
-    
-    applePayHandler.requestApplePay(
-      cartItems: cartItems,
-      currencyCode: currencyCode,
-      countryCode: countryCode,
-      onApplePayResult: callbackDelegate
-    )
+
+    // Use TapPay iOS SDK to set card and generate prime
+    // According to TapPay iOS SDK (TPDCard.setWithCardNumber(...) with callbacks)
+    TPDCard.setWithCardNumber(cardNumber, withDueMonth: expiryMonth, withDueYear: expiryYear, withCCV: cvv)
+      .onSuccessCallback({ (prime: String!, cardInfo: TPDCardInfo!) in
+        var result = CreateCardTokenByCardInfoResult(success: true, status: nil, message: nil, prime: prime).toDictionary()
+        if let ch = cardholder {
+          // echo provided cardholder back to Dart so server can use it
+          result["cardholder"] = ch
+        } else {
+          // if cardInfo contains cardholder data, you may extract it here; left as TODO
+        }
+        onResult(result)
+      })
+      .onFailureCallback({ (status: NSNumber!, message: String!) in
+        let res = CreateCardTokenByCardInfoResult(success: false, status: status.intValue, message: message, prime: nil)
+        onResult(res.toDictionary())
+      })
   }
 }
+
+// MARK: - Helper: CreateCardTokenByCardInfoResult for Swift
+// Implement a small struct similar to the Android/iOS model used in your repo.
+// If you already have CreateCardTokenByCardInfoResult.swift in ios/Classes/models, use it and remove this helper.
+public struct CreateCardTokenByCardInfoResult {
+  public var success: Bool
+  public var status: Int?
+  public var message: String?
+  public var prime: String?
+
+  public func toDictionary() -> [String: Any?] {
+    return [
+      "success": success,
+      "status": status,
+      "message": message,
+      "prime": prime
+    ]
+  }
+}
+
