@@ -201,52 +201,109 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
    *
    * Modified to accept optional cardholder HashMap and echo it in the success result.
    */
-  private fun createTokenByCardInfo(
-    cardNumber: String?, expiryMonth: String?, expiryYear: String?,
-    cvv: String?, cardholder: HashMap<String, Any?>?,
-    onResult: (HashMap<String, Any?>) -> (Unit)
+  // 替換整個 createTokenByCardInfo(...) 的主體為以下
+private fun createTokenByCardInfo(
+  cardNumber: String?, expiryMonth: String?, expiryYear: String?,
+  cvv: String?, cardholder: HashMap<String, Any?>?,
+  onResult: (HashMap<String, Any?>) -> (Unit)
+) {
+  if (cardNumber.isNullOrEmpty() || expiryMonth.isNullOrEmpty() || expiryYear.isNullOrEmpty() ||
+    cvv.isNullOrEmpty()
   ) {
-    if (cardNumber.isNullOrEmpty() || expiryMonth.isNullOrEmpty() || expiryYear.isNullOrEmpty() ||
-      cvv.isNullOrEmpty()
-    ) {
-      onResult(
-        CreateCardTokenByCardInfoResult(
-          false,
-          null,
-          "Missing required parameters for \"getPrimeByCardInfo\" method.",
-          null
-        ).toHashMap()
-      )
-      return
+    onResult(
+      CreateCardTokenByCardInfoResult(
+        false,
+        null,
+        "Missing required parameters for \"getPrimeByCardInfo\" method.",
+        null
+      ).toHashMap()
+    )
+    return
+  }
+
+  val tpdCard = TPDCard(
+    context, StringBuffer(cardNumber), StringBuffer(expiryMonth),
+    StringBuffer(expiryYear), StringBuffer(cvv)
+  )
+
+  // === 嘗試注入 cardholder 到 SDK（若 SDK 有支援的話） ===
+  if (cardholder != null) {
+    val phone = cardholder["phone_number"]?.toString()
+    val email = cardholder["email"]?.toString()
+    val nameEn = cardholder["name_en"]?.toString()
+    val countryCode = cardholder["phone_number_country_code"]?.toString()
+
+    // 嘗試幾種可能的 method 名（根據不同版本 SDK 名稱可能不同）
+    val candidateMethodNames = arrayOf(
+      "setCardholderInfo",        // 常見命名
+      "setCardHolderInfo",
+      "setCardholder",
+      "setCardHolder",
+      "setConsumer",              // 若 SDK 用 consumer/holder 等命名
+      "setConsumerInfo"
+    )
+
+    var injected = false
+    for (name in candidateMethodNames) {
+      try {
+        // 嘗試找到 instance method
+        val m = tpdCard.javaClass.getMethod(name, String::class.java, String::class.java, String::class.java, String::class.java)
+        m.invoke(tpdCard, phone, email, nameEn, countryCode)
+        injected = true
+        break
+      } catch (e: NoSuchMethodException) {
+        // 忽略，試下一個候選
+      } catch (e: Exception) {
+        // 其他例外也忽略（反射呼叫失敗）
+      }
     }
 
-    val tpdCard = TPDCard(
-      context, StringBuffer(cardNumber), StringBuffer(expiryMonth),
-      StringBuffer(expiryYear), StringBuffer(cvv)
-    ).onSuccessCallback { prime, _, _, cardInfo ->
-      val resultMap = CreateCardTokenByCardInfoResult(true, null, null, prime).toHashMap()
+    // 如果沒找到 instance method，嘗試找 static/class 形式 (例如 TPDCard.setCardholderInfo(...))
+    if (!injected) {
+      for (name in candidateMethodNames) {
+        try {
+          val clazz = TPDCard::class.java
+          val m2 = clazz.getMethod(name, String::class.java, String::class.java, String::class.java, String::class.java)
+          m2.invoke(null, phone, email, nameEn, countryCode)
+          injected = true
+          break
+        } catch (e: NoSuchMethodException) {
+        } catch (e: Exception) {
+        }
+      }
+    }
 
-      // If caller provided cardholder map, include it in returned map so Dart/server can see it.
-      if (cardholder != null) {
-        resultMap["cardholder"] = cardholder
-      } else {
-        // If SDK provides cardholder in cardInfo, you may parse it here.
-        // Example (pseudocode):
+    // 若成功注入（injected == true），在這裡可選 log
+    // 若沒有注入，繼續下面回傳時 echo cardholder（server 可使用 echo 的 cardholder 來做 Update 用）
+  }
+
+  // success / failure callback
+  tpdCard.onSuccessCallback { prime, _, _, cardInfo ->
+    val resultMap = CreateCardTokenByCardInfoResult(true, null, null, prime).toHashMap()
+
+    // Always include the original cardholder that Dart passed (so server can use it to update if SDK cannot accept it directly)
+    if (cardholder != null) {
+      resultMap["cardholder"] = cardholder
+    } else {
+      // 若 SDK 回傳 cardInfo 有 cardholder，可在此解析並放入
+      try {
+        // pseudocode: if cardInfo has fields for cardholder
         // val returned = parseCardInfoCardholder(cardInfo)
         // if (returned != null) resultMap["cardholder"] = returned
+      } catch (e: Exception) {
       }
-
-      onResult(resultMap)
-    }.onFailureCallback { status, reportMsg ->
-      onResult(CreateCardTokenByCardInfoResult(false, status, reportMsg, null).toHashMap())
     }
 
-    // If TapPay Android SDK supports passing cardholder into the token creation call,
-    // you would add that here (example comment):
-    // tpdCard.setCardholderInfo(...)
-
-    tpdCard.createToken("UNKNOWN")
+    onResult(resultMap)
+  }.onFailureCallback { status, reportMsg ->
+    onResult(CreateCardTokenByCardInfoResult(false, status, reportMsg, null).toHashMap())
   }
+
+  // If TapPay Android SDK supports passing cardholder into the token creation call,
+  // the reflection above should have attempted to call it.
+  tpdCard.createToken("UNKNOWN")
+}
+
 
   private fun initGooglePay(
     merchantName: String? = null,
