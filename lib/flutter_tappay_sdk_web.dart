@@ -2,53 +2,46 @@
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 import 'flutter_tappay_sdk_platform_interface.dart';
-import 'flutter_tappay_sdk_method_channel.dart';
-import 'src/flutter_tappay_sdk_web_impl.dart';
-
 import 'models/cardholder_prime_result.dart';
 import 'models/tappay_cardholder.dart';
+import 'src/flutter_tappay_sdk_web_impl.dart';
 
-/// A web implementation of the FlutterTapPay SDK.
-class FlutterTapPaySdkWeb extends MethodChannelFlutterTapPaySdk {
-  /// 註冊點，Flutter Web 會調用
+/// Web implementation of the FlutterTapPaySdk platform interface.
+///
+/// This registers itself as the instance for `FlutterTapPaySdkPlatform`.
+class FlutterTapPaySdkWeb extends FlutterTapPaySdkPlatform {
+  /// Register this class as the platform implementation.
   static void registerWith(Registrar registrar) {
     FlutterTapPaySdkPlatform.instance = FlutterTapPaySdkWeb();
   }
 
-  @override
-  Future<void> setupSDK({
-    required int appId,
-    required String appKey,
-    required String serverType,
-  }) {
-    return FlutterTappaySdkWebImpl().setupSDK(
-      appId: appId,
-      appKey: appKey,
-      serverType: serverType,
-    );
-  }
+  final FlutterTappaySdkWebImpl _impl = FlutterTappaySdkWebImpl();
 
   @override
-  Future<String> getPrime() async {
-    final prime = await FlutterTappaySdkWebImpl().getPrime();
-    if (prime == null || prime.isEmpty) {
-      throw Exception('getPrime failed: Received null or empty prime');
+  Future<CardholderPrimeResult> getCardholderInfoPrime(TappayCardholder cardholder) async {
+    // call the web impl which talks to TPDirect JS SDK
+    try {
+      final Map<String, dynamic>? result = await _impl.getPrimeWithCardholder(cardholder.toJson());
+
+      if (result == null) {
+        return CardholderPrimeResult(
+          status: -1,
+          msg: 'no response from web SDK',
+          prime: null,
+        );
+      }
+
+      // Map the result into our model
+      return CardholderPrimeResult.fromJson(result);
+    } catch (e, st) {
+      // Defensive: any JS/interop error -> return result with error info
+      return CardholderPrimeResult(
+        status: -1,
+        msg: 'exception: ${e.toString()}',
+        prime: null,
+      );
     }
-    return prime;
   }
 
-  @override
-  Future<String> getDeviceId() {
-    return FlutterTappaySdkWebImpl().getDeviceId();
-  }
-
-  /// 這個方法就是你要的：呼叫 web impl 的 getPrimeWithCardholder()
-  /// 並把回傳 map 轉成 CardholderPrimeResult
-  @override
-  Future<CardholderPrimeResult?> getCardholderInfoPrime() async {
-    final map = await FlutterTappaySdkWebImpl().getPrimeWithCardholder();
-    if (map == null) return CardholderPrimeResult(success: false);
-
-    return CardholderPrimeResult.fromMap(map);
-  }
+  // 如果你的 platform interface 還有其他 web-specific 方法，也可以在這裡實作。
 }
