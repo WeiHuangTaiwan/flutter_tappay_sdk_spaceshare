@@ -1,91 +1,43 @@
 // lib/models/tappay_cardholder.dart
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:convert';
-
-import 'package:validators/validators.dart' as validators;
-
-class TapPayCardholder {
+/// Model that maps to the TapPay Web cardholder object.
+/// The fields are optional because TapPay accepts different subsets.
+/// Adjust fields depending on what you collect in UI.
+class TappayCardholder {
+  final String? name;
   final String? email;
-  final String? phoneNumber; // E.164, max 16
-  final String? phoneNumberCountryCode; // String(3), default '886'
-  final String? nameEn; // String(45)
-  final String? name; // local name (optional)
+  final String? phone;
+  final String? zipCode;
+  final String? address;
+  final String? nationalId;
 
-  TapPayCardholder({
-    this.email,
-    this.phoneNumber,
-    this.phoneNumberCountryCode,
-    this.nameEn,
+  TappayCardholder({
     this.name,
+    this.email,
+    this.phone,
+    this.zipCode,
+    this.address,
+    this.nationalId,
   });
 
-  TapPayCardholder copyWith({
-    String? email,
-    String? phoneNumber,
-    String? phoneNumberCountryCode,
-    String? nameEn,
-    String? name,
-  }) {
-    return TapPayCardholder(
-      email: email ?? this.email,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      phoneNumberCountryCode: phoneNumberCountryCode ?? this.phoneNumberCountryCode,
-      nameEn: nameEn ?? this.nameEn,
-      name: name ?? this.name,
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> map = {};
+    if (name != null) map['name'] = name;
+    if (email != null) map['email'] = email;
+    if (phone != null) map['phone'] = phone;
+    if (zipCode != null) map['zipCode'] = zipCode;
+    if (address != null) map['address'] = address;
+    if (nationalId != null) map['nationalId'] = nationalId;
+    return map;
+  }
+
+  factory TappayCardholder.fromJson(Map<String, dynamic> json) {
+    return TappayCardholder(
+      name: json['name'] as String?,
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+      zipCode: json['zipCode'] as String?,
+      address: json['address'] as String?,
+      nationalId: json['nationalId'] as String?,
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'email': email,
-      'phone_number': phoneNumber,
-      'phone_number_country_code': phoneNumberCountryCode,
-      'name_en': nameEn,
-      'name': name,
-    }..removeWhere((_, v) => v == null);
-  }
-
-  factory TapPayCardholder.fromMap(Map<dynamic, dynamic>? map) {
-    if (map == null) return TapPayCardholder();
-    return TapPayCardholder(
-      email: map['email'] as String?,
-      phoneNumber: map['phone_number'] as String?,
-      phoneNumberCountryCode: map['phone_number_country_code'] as String?,
-      nameEn: map['name_en'] as String?,
-      name: map['name'] as String?,
-    );
-  }
-
-  String toJson() => json.encode(toMap());
-
-  factory TapPayCardholder.fromJson(String source) =>
-      TapPayCardholder.fromMap(json.decode(source) as Map<dynamic, dynamic>);
-
-  @override
-  String toString() {
-    return 'TapPayCardholder(email: $email, phoneNumber: $phoneNumber, phoneNumberCountryCode: $phoneNumberCountryCode, nameEn: $nameEn, name: $name)';
-  }
-
-  /// Basic validation according to TapPay suggestions:
-  /// - at least email or phoneNumber present
-  /// - email is a plausible email
-  /// - phoneNumber digits (allow leading +), length <= 16
-  /// - nameEn length <= 45
-  bool validate() {
-    if ((email == null || email!.isEmpty) && (phoneNumber == null || phoneNumber!.isEmpty)) {
-      return false;
-    }
-    if (email != null && email!.isNotEmpty) {
-      if (!validators.isEmail(email!)) return false;
-      if (email!.startsWith('.') || email!.endsWith('.')) return false;
-    }
-    if (phoneNumber != null && phoneNumber!.isNotEmpty) {
-      final p = phoneNumber!;
-      final normalized = p.startsWith('+') ? p.substring(1) : p;
-      if (!RegExp(r'^\d+$').hasMatch(normalized)) return false;
-      if (normalized.length > 16) return false;
-    }
-    if (nameEn != null && nameEn!.length > 45) return false;
-    return true;
   }
 }
