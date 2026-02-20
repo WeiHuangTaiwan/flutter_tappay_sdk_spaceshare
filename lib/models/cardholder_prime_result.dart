@@ -19,6 +19,7 @@ class CardholderPrimeResult {
     this.cardInfo,
   });
 
+  /// Existing factory kept (json)
   factory CardholderPrimeResult.fromJson(Map<String, dynamic> json) {
     // TapPay sometimes returns 'msg' or 'message', and card info could be 'card_info'
     final int? statusVal = _toInt(json['status']);
@@ -40,6 +41,12 @@ class CardholderPrimeResult {
       prime: primeVal,
       cardInfo: cardInfo,
     );
+  }
+
+  /// New: fromMap alias for consistency with other models (fromMap/fromMapFromMap)
+  factory CardholderPrimeResult.fromMap(Map<String, dynamic> map) {
+    // just forward to fromJson for compatibility
+    return CardholderPrimeResult.fromJson(map);
   }
 
   Map<String, dynamic> toJson() => {
