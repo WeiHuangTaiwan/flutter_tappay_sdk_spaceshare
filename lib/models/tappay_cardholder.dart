@@ -2,6 +2,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
+import 'package:validators/validators.dart' as validators;
+
 class TapPayCardholder {
   final String? email;
   final String? phoneNumber; // E.164, max 16
@@ -62,5 +64,28 @@ class TapPayCardholder {
   @override
   String toString() {
     return 'TapPayCardholder(email: $email, phoneNumber: $phoneNumber, phoneNumberCountryCode: $phoneNumberCountryCode, nameEn: $nameEn, name: $name)';
+  }
+
+  /// Basic validation according to TapPay suggestions:
+  /// - at least email or phoneNumber present
+  /// - email is a plausible email
+  /// - phoneNumber digits (allow leading +), length <= 16
+  /// - nameEn length <= 45
+  bool validate() {
+    if ((email == null || email!.isEmpty) && (phoneNumber == null || phoneNumber!.isEmpty)) {
+      return false;
+    }
+    if (email != null && email!.isNotEmpty) {
+      if (!validators.isEmail(email!)) return false;
+      if (email!.startsWith('.') || email!.endsWith('.')) return false;
+    }
+    if (phoneNumber != null && phoneNumber!.isNotEmpty) {
+      final p = phoneNumber!;
+      final normalized = p.startsWith('+') ? p.substring(1) : p;
+      if (!RegExp(r'^\d+$').hasMatch(normalized)) return false;
+      if (normalized.length > 16) return false;
+    }
+    if (nameEn != null && nameEn!.length > 45) return false;
+    return true;
   }
 }
