@@ -20,8 +20,14 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var channel: MethodChannel
 
   private lateinit var context: Context
-  private lateinit var activity: Activity
+
+  // Make activity nullable — safer for detach/reattach cycles
+  private var activity: Activity? = null
+
   private lateinit var googlePayHandler: GooglePayHandler
+
+  // Keep a reference to ActivityPluginBinding so we can remove listeners on detach
+  private var activityPluginBinding: ActivityPluginBinding? = null
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_tappay_sdk")
@@ -32,22 +38,47 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
     activity = binding.activity
-    googlePayHandler.setActivity(activity)
+    activityPluginBinding = binding
+    // googlePayHandler expects a non-null Activity; only set when available
+    activity?.let {
+      googlePayHandler.setActivity(it)
+    }
     binding.addActivityResultListener(googlePayHandler)
+    // If googlePayHandler needs permission callbacks, you can also add:
+    // binding.addRequestPermissionsResultListener(googlePayHandler)
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
-    activity = null!!
+    // remove previously registered listeners and clear activity/binding references
+    try {
+      activityPluginBinding?.removeActivityResultListener(googlePayHandler)
+      // If you registered request permissions listener, remove it similarly:
+      // activityPluginBinding?.removeRequestPermissionsResultListener(googlePayHandler)
+    } catch (e: Exception) {
+      // ignore if removal isn't supported in some older embedding versions
+    }
+    activity = null
+    activityPluginBinding = null
   }
 
   override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
     activity = binding.activity
-    googlePayHandler.setActivity(activity)
+    activityPluginBinding = binding
+    activity?.let {
+      googlePayHandler.setActivity(it)
+    }
     binding.addActivityResultListener(googlePayHandler)
+    // binding.addRequestPermissionsResultListener(googlePayHandler)
   }
 
   override fun onDetachedFromActivity() {
-    activity = null!!
+    try {
+      activityPluginBinding?.removeActivityResultListener(googlePayHandler)
+      // activityPluginBinding?.removeRequestPermissionsResultListener(googlePayHandler)
+    } catch (e: Exception) {
+    }
+    activity = null
+    activityPluginBinding = null
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
