@@ -110,8 +110,17 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
       return
     }
 
+    // If the SDK provides a direct API to set cardholder info, you should call it here
+    // before requesting the prime. Example (pseudocode):
+    //
+    // if let ch = cardholder {
+    //   TPDCard.setCardholder(phone: ch["phone_number"] as? String,
+    //                         email: ch["email"] as? String,
+    //                         nameEn: ch["name_en"] as? String,
+    //                         countryCode: ch["phone_number_country_code"] as? String)
+    // }
+
     // Use TapPay iOS SDK to set card and generate prime
-    // According to TapPay iOS SDK (TPDCard.setWithCardNumber(...) with callbacks)
     TPDCard.setWithCardNumber(cardNumber, withDueMonth: expiryMonth, withDueYear: expiryYear, withCCV: cvv)
       .onSuccessCallback({ (prime: String!, cardInfo: TPDCardInfo!) in
         var result = CreateCardTokenByCardInfoResult(success: true, status: nil, message: nil, prime: prime).toDictionary()
@@ -148,4 +157,3 @@ public struct CreateCardTokenByCardInfoResult {
     ]
   }
 }
-
