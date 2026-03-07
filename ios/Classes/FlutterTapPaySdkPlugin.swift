@@ -138,22 +138,3 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
       })
   }
 }
-
-// MARK: - Helper: CreateCardTokenByCardInfoResult for Swift
-// Implement a small struct similar to the Android/iOS model used in your repo.
-// If you already have CreateCardTokenByCardInfoResult.swift in ios/Classes/models, use it and remove this helper.
-public struct CreateCardTokenByCardInfoResult {
-  public var success: Bool
-  public var status: Int?
-  public var message: String?
-  public var prime: String?
-
-  public func toDictionary() -> [String: Any?] {
-    return [
-      "success": success,
-      "status": status,
-      "message": message,
-      "prime": prime
-    ]
-  }
-}
