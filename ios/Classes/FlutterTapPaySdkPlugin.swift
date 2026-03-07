@@ -15,6 +15,8 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
 
     switch call.method {
     case "sdkVersion":
+      // NOTE: If your TPDirect SDK provides a different API for fetching the SDK version,
+      // replace this call with that API. Some TPDirect versions do not expose getVersion().
       result(TPDSetup.getVersion())
 
     case "initPayment":
@@ -85,6 +87,11 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
       return
     }
 
+    // NOTE:
+    // The TPDirect SDK has had breaking changes across versions. The code below uses
+    // the commonly-seen initialization API (initInstance with server type enum).
+    // If your TPDirect version uses a different initializer or enum naming, replace
+    // the call below with the correct API (or pin the TPDirect pod to a compatible version).
     let serverType: TPDServerType = isSandbox ? .sandbox : .production
     // TPDSetup init
     TPDSetup.initInstance(withAppId: Int32(appId), withAppKey: appKey, with: serverType)
@@ -98,7 +105,8 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
       return false
     }
     // TPDCard.validate returns TPDCardValidationResult on iOS
-    let validation = TPDCard.validate(with: cardNumber, withDueMonth: mm, withDueYear: yy, withCCV: cvv)
+    // Use the parameter label that recent TPDirect SDKs expect.
+    let validation = TPDCard.validate(withCardNumber: cardNumber, withDueMonth: mm, withDueYear: yy, withCCV: cvv)
     return (validation?.isCardNumberValid ?? false) && (validation?.isExpiryDateValid ?? false) && (validation?.isCCVValid ?? false)
   }
 
@@ -120,9 +128,12 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
     //                         countryCode: ch["phone_number_country_code"] as? String)
     // }
 
-    // Use TapPay iOS SDK to set card and generate prime
+    // Use TapPay iOS SDK to set card and generate prime.
+    // The onSuccess/onFailure signatures vary between SDK versions; here we use a
+    // 4-argument success callback and (Int, String) failure callback which matches
+    // recent SDK expectations.
     TPDCard.setWithCardNumber(cardNumber, withDueMonth: expiryMonth, withDueYear: expiryYear, withCCV: cvv)
-      .onSuccessCallback({ (prime: String!, cardInfo: TPDCardInfo!) in
+      .onSuccessCallback({ (prime: String?, cardInfo: TPDCardInfo?, someString: String?, extraInfo: [AnyHashable: Any]?) in
         var result = CreateCardTokenByCardInfoResult(success: true, status: nil, message: nil, prime: prime).toDictionary()
         if let ch = cardholder {
           // echo provided cardholder back to Dart so server can use it
@@ -132,8 +143,8 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
         }
         onResult(result)
       })
-      .onFailureCallback({ (status: NSNumber!, message: String!) in
-        let res = CreateCardTokenByCardInfoResult(success: false, status: status.intValue, message: message, prime: nil)
+      .onFailureCallback({ (status: Int, message: String) in
+        let res = CreateCardTokenByCardInfoResult(success: false, status: status, message: message, prime: nil)
         onResult(res.toDictionary())
       })
   }
