@@ -1,8 +1,8 @@
-// lib/flutter_tappay_sdk.dart
+// lib/flutter_tappay_sdk_spaceshare.dart
 import 'package:flutter/foundation.dart'; // 用來判斷 kIsWeb
-import 'package:flutter_tappay_sdk/models/tappay_prime.dart';
+import 'package:flutter_tappay_sdk_spaceshare/models/tappay_prime.dart';
 
-import 'flutter_tappay_sdk_platform_interface.dart';
+import 'flutter_tappay_sdk_spaceshare_platform_interface.dart';
 import 'models/tappay_init_result.dart';
 import 'models/tappay_sdk_common_result.dart';
 import 'tappay/auth_methods.dart';

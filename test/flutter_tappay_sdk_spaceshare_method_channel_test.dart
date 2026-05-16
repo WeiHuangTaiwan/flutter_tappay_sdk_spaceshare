@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_tappay_sdk/flutter_tappay_sdk_method_channel.dart';
+import 'package:flutter_tappay_sdk_spaceshare/flutter_tappay_sdk_spaceshare_method_channel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('flutter_tappay_sdk');
+  const channel = MethodChannel('flutter_tappay_sdk_spaceshare');
   final platform = MethodChannelFlutterTapPaySdk();
 
   tearDown(() {

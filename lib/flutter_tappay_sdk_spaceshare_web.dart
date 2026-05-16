@@ -1,11 +1,11 @@
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-import 'flutter_tappay_sdk_platform_interface.dart';
+import 'flutter_tappay_sdk_spaceshare_platform_interface.dart';
 import 'models/cardholder_prime_result.dart';
 import 'models/tappay_init_result.dart';
 import 'models/tappay_prime.dart';
 import 'models/tappay_sdk_common_result.dart';
-import 'src/flutter_tappay_sdk_web_impl.dart';
+import 'src/flutter_tappay_sdk_spaceshare_web_impl.dart';
 import 'tappay/auth_methods.dart';
 import 'tappay/card_type.dart';
 import 'tappay/cart_item.dart';

@@ -1,5 +1,5 @@
-name: flutter_tappay_sdk_example
-description: 'Demonstrates how to use the flutter_tappay_sdk plugin.'
+name: flutter_tappay_sdk_spaceshare_example
+description: 'Demonstrates how to use the flutter_tappay_sdk_spaceshare plugin.'
 
 publish_to: 'none'
 version: 1.0.0+0
@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_tappay_sdk:
+  flutter_tappay_sdk_spaceshare:
     path: ../
 
   cupertino_icons: ^1.0.2

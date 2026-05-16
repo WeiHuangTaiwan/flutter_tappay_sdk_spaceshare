@@ -5,7 +5,7 @@ import TPDirect
 
 public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "flutter_tappay_sdk", binaryMessenger: registrar.messenger())
+    let channel = FlutterMethodChannel(name: "flutter_tappay_sdk_spaceshare", binaryMessenger: registrar.messenger())
     let instance = FlutterTapPaySdkPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }

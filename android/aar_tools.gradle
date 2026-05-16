@@ -16,8 +16,8 @@ static aarFileCopy(String srcPath,String desPath) {
     }
 }
 
-// 這邊的 kent.chien.flutter_tappay_sdk 要改
-copyAar2Host('kent.chien.flutter_tappay_sdk')
+// 這邊的 kent.chien.flutter_tappay_sdk_spaceshare 要改
+copyAar2Host('kent.chien.flutter_tappay_sdk_spaceshare')
 void copyAar2Host(String pluginGroup) {
     Project currentProject = null
     Project appProject = null

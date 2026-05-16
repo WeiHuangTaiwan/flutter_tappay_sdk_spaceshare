@@ -11,7 +11,7 @@ class FlutterTappaySdkWebImpl {
     if (sdk == null) {
       throw StateError(
         'TPDirect is not available. Add the TapPay web SDK script before using '
-        'flutter_tappay_sdk on web.',
+        'flutter_tappay_sdk_spaceshare on web.',
       );
     }
     return sdk;

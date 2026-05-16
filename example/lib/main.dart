@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_tappay_sdk/flutter_tappay_sdk.dart';
-import 'package:flutter_tappay_sdk/tappay/cart_item.dart';
+import 'package:flutter_tappay_sdk_spaceshare/flutter_tappay_sdk_spaceshare.dart';
+import 'package:flutter_tappay_sdk_spaceshare/tappay/cart_item.dart';
 
 import 'constants.dart';
 

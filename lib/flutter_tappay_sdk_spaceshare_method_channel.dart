@@ -1,8 +1,8 @@
-// lib/flutter_tappay_sdk_method_channel.dart
+// lib/flutter_tappay_sdk_spaceshare_method_channel.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-import 'flutter_tappay_sdk_platform_interface.dart';
+import 'flutter_tappay_sdk_spaceshare_platform_interface.dart';
 import 'models/tappay_init_result.dart';
 import 'models/tappay_sdk_common_result.dart';
 import 'models/tappay_prime.dart';
@@ -16,7 +16,7 @@ import 'models/cardholder_prime_result.dart';
 class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('flutter_tappay_sdk');
+  final methodChannel = const MethodChannel('flutter_tappay_sdk_spaceshare');
 
   bool get _isAndroid =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;

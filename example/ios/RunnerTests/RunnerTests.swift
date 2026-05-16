@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import XCTest
 
-@testable import flutter_tappay_sdk
+@testable import flutter_tappay_sdk_spaceshare
 
 // This demonstrates a simple unit test of the Swift portion of this plugin's implementation.
 //

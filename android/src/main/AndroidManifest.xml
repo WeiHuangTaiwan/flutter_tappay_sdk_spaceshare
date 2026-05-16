@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="kent.chien.flutter_tappay_sdk">
+  package="kent.chien.flutter_tappay_sdk_spaceshare">
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <application>
         <meta-data

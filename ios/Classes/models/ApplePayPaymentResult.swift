@@ -1,6 +1,6 @@
 //
 //  ApplePayPaymentResult.swift
-//  flutter_tappay_sdk
+//  flutter_tappay_sdk_spaceshare
 //
 //  Created by Kent C on 2023/12/13.
 //

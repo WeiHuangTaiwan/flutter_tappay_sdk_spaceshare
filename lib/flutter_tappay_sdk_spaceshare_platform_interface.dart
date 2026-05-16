@@ -1,8 +1,8 @@
-// lib/flutter_tappay_sdk_platform_interface.dart
-import 'package:flutter_tappay_sdk/tappay/card_type.dart';
+// lib/flutter_tappay_sdk_spaceshare_platform_interface.dart
+import 'package:flutter_tappay_sdk_spaceshare/tappay/card_type.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'flutter_tappay_sdk_method_channel.dart';
+import 'flutter_tappay_sdk_spaceshare_method_channel.dart';
 import 'models/tappay_init_result.dart';
 import 'models/tappay_prime.dart';
 import 'models/tappay_sdk_common_result.dart';
@@ -11,7 +11,7 @@ import 'tappay/cart_item.dart';
 
 import 'models/cardholder_prime_result.dart';
 
-/// The interface that implementations of flutter_tappay_sdk must implement.
+/// The interface that implementations of flutter_tappay_sdk_spaceshare must implement.
 abstract class FlutterTapPaySdkPlatform extends PlatformInterface {
   FlutterTapPaySdkPlatform() : super(token: _token);
 

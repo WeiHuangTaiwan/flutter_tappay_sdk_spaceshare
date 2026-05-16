@@ -1,7 +1,7 @@
-name: flutter_tappay_sdk
-description: 'SpaceShareTappy: a cross-platform Flutter wrapper for TapPay.'
+name: flutter_tappay_sdk_spaceshare
+description: 'flutter_tappay_sdk_spaceshare: a cross-platform Flutter wrapper for TapPay.'
 version: 0.3.1
-homepage: https://github.com/WeiHuangTaiwan/SpaceShareTappy
+homepage: https://github.com/WeiHuangTaiwan/flutter_tappay_sdk_spaceshare
 
 environment:
   sdk: '>=2.17.0 <4.0.0'
@@ -23,10 +23,10 @@ flutter:
   plugin:
     platforms:
       android:
-        package: kent.chien.flutter_tappay_sdk
+        package: kent.chien.flutter_tappay_sdk_spaceshare
         pluginClass: FlutterTapPaySdkPlugin
       ios:
         pluginClass: FlutterTapPaySdkPlugin
       web:
         pluginClass: FlutterTapPaySdkWeb
-        fileName: flutter_tappay_sdk_web.dart
+        fileName: flutter_tappay_sdk_spaceshare_web.dart

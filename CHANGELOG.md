@@ -1,6 +1,6 @@
 ## 0.3.1
 
-- chore: Rebrand README for SpaceShareTappy.
+- chore: Rename package and README for flutter_tappay_sdk_spaceshare.
 - fix: Make the web implementation compile with Flutter web registration.
 - fix: Add cross-platform guards without importing `dart:io` into web builds.
 - test: Restore package tests with method-channel coverage.

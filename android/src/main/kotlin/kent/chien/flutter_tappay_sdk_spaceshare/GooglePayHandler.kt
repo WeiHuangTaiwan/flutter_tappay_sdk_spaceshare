@@ -1,4 +1,4 @@
-package kent.chien.flutter_tappay_sdk
+package kent.chien.flutter_tappay_sdk_spaceshare
 
 import android.Manifest
 import android.app.Activity
@@ -15,7 +15,7 @@ import com.google.android.gms.wallet.PaymentData
 import com.google.android.gms.wallet.TransactionInfo
 import com.google.android.gms.wallet.WalletConstants
 import io.flutter.plugin.common.PluginRegistry
-import kent.chien.flutter_tappay_sdk.models.TapPaySdkCommonResult
+import kent.chien.flutter_tappay_sdk_spaceshare.models.TapPaySdkCommonResult
 import tech.cherri.tpdirect.api.TPDCard
 import tech.cherri.tpdirect.api.TPDConsumer
 import tech.cherri.tpdirect.api.TPDGooglePay

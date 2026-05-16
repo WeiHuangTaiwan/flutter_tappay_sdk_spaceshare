@@ -1,4 +1,4 @@
-package kent.chien.flutter_tappay_sdk
+package kent.chien.flutter_tappay_sdk_spaceshare
 
 import android.app.Activity
 import android.content.Context
@@ -9,8 +9,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import kent.chien.flutter_tappay_sdk.models.CreateCardTokenByCardInfoResult
-import kent.chien.flutter_tappay_sdk.models.TapPaySdkCommonResult
+import kent.chien.flutter_tappay_sdk_spaceshare.models.CreateCardTokenByCardInfoResult
+import kent.chien.flutter_tappay_sdk_spaceshare.models.TapPaySdkCommonResult
 import tech.cherri.tpdirect.api.TPDCard
 import tech.cherri.tpdirect.api.TPDServerType
 import tech.cherri.tpdirect.api.TPDSetup
@@ -30,7 +30,7 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   private var activityPluginBinding: ActivityPluginBinding? = null
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_tappay_sdk")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_tappay_sdk_spaceshare")
     channel.setMethodCallHandler(this)
     context = flutterPluginBinding.applicationContext
     googlePayHandler = GooglePayHandler(context)

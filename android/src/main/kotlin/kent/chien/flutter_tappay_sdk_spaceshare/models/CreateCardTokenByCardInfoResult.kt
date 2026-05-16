@@ -1,4 +1,4 @@
-package kent.chien.flutter_tappay_sdk.models
+package kent.chien.flutter_tappay_sdk_spaceshare.models
 
 data class CreateCardTokenByCardInfoResult(
   val success: Boolean,

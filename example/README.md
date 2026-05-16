@@ -1,6 +1,6 @@
-# flutter_tappay_sdk_example
+# flutter_tappay_sdk_spaceshare_example
 
-Demonstrates how to use the flutter_tappay_sdk plugin.
+Demonstrates how to use the flutter_tappay_sdk_spaceshare plugin.
 
 ## Getting Started
 

@@ -1,4 +1,4 @@
-package kent.chien.flutter_tappay_sdk
+package kent.chien.flutter_tappay_sdk_spaceshare
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

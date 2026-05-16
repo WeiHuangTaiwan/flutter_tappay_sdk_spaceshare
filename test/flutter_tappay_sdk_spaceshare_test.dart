@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_tappay_sdk/flutter_tappay_sdk_method_channel.dart';
-import 'package:flutter_tappay_sdk/flutter_tappay_sdk_platform_interface.dart';
+import 'package:flutter_tappay_sdk_spaceshare/flutter_tappay_sdk_spaceshare_method_channel.dart';
+import 'package:flutter_tappay_sdk_spaceshare/flutter_tappay_sdk_spaceshare_platform_interface.dart';
 
 void main() {
   test('default platform implementation uses method channel', () {

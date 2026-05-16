@@ -1,6 +1,6 @@
-# SpaceShareTappy
+# flutter_tappay_sdk_spaceshare
 
-SpaceShareTappy is a community Flutter wrapper for TapPay. It keeps one Dart API
+flutter_tappay_sdk_spaceshare is a community Flutter wrapper for TapPay. It keeps one Dart API
 for Flutter apps and routes the actual payment-token work to the platform that is
 running the app:
 
@@ -24,9 +24,9 @@ examples remain platform-specific.
 
 ```yaml
 dependencies:
-  flutter_tappay_sdk:
+  flutter_tappay_sdk_spaceshare:
     git:
-      url: https://github.com/WeiHuangTaiwan/SpaceShareTappy.git
+      url: https://github.com/WeiHuangTaiwan/flutter_tappay_sdk_spaceshare.git
 ```
 
 ## Web Setup
@@ -43,7 +43,7 @@ elements before calling `getWebPrime()` or `getCardPrime()` on web.
 ## Basic Usage
 
 ```dart
-import 'package:flutter_tappay_sdk/flutter_tappay_sdk.dart';
+import 'package:flutter_tappay_sdk_spaceshare/flutter_tappay_sdk_spaceshare.dart';
 
 final tappay = FlutterTapPaySdk();
 
