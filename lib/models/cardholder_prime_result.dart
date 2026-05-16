@@ -1,10 +1,13 @@
 // lib/models/cardholder_prime_result.dart
 class CardholderPrimeResult {
+  /// Whether the cardholder-prime call succeeded.
+  final bool success;
+
   /// TapPay returns a status integer; 0 or 1 usually means success depending on API.
   final int? status;
 
   /// message from TapPay (or SDK)
-  final String? msg;
+  final String? message;
 
   /// The prime string (used by your server to Pay By Prime)
   final String? prime;
@@ -13,17 +16,23 @@ class CardholderPrimeResult {
   final Map<String, dynamic>? cardInfo;
 
   CardholderPrimeResult({
+    bool? success,
     this.status,
-    this.msg,
+    String? message,
+    String? msg,
     this.prime,
     this.cardInfo,
-  });
+  })  : success = success ?? status == 0,
+        message = message ?? msg;
+
+  String? get msg => message;
 
   /// Existing factory kept (json)
   factory CardholderPrimeResult.fromJson(Map<String, dynamic> json) {
     // TapPay sometimes returns 'msg' or 'message', and card info could be 'card_info'
     final int? statusVal = _toInt(json['status']);
-    final String? msgVal = json['msg'] ?? json['message'] ?? json['statusMessage']?.toString();
+    final String? msgVal =
+        json['msg'] ?? json['message'] ?? json['statusMessage']?.toString();
     final String? primeVal = json['prime']?.toString();
 
     Map<String, dynamic>? cardInfo;
@@ -36,8 +45,9 @@ class CardholderPrimeResult {
     }
 
     return CardholderPrimeResult(
+      success: json['success'] as bool? ?? statusVal == 0,
       status: statusVal,
-      msg: msgVal,
+      message: msgVal,
       prime: primeVal,
       cardInfo: cardInfo,
     );
@@ -50,8 +60,10 @@ class CardholderPrimeResult {
   }
 
   Map<String, dynamic> toJson() => {
+        'success': success,
         'status': status,
-        'msg': msg,
+        'message': message,
+        'msg': message,
         'prime': prime,
         'card_info': cardInfo,
       };

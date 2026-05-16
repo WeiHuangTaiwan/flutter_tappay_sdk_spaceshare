@@ -1,54 +1,113 @@
-// lib/src/flutter_tappay_sdk_web_impl.dart
-// JS interop implementation for TPDirect (TapPay) on Web.
-//
-// This file uses dart:js_util to call the global TPDirect object and
-// returns a Dart Map (decoded from JS object).
-//
-// NOTE: The host web page must have included the official TapPay JS SDK
-// (e.g., <script src="https://js.tappaysdk.com/tpdirect/v5.21.0"></script> or current version).
-// Also TPDirect.setupSDK(...) should already have been called by user code
-// (or you can expose a Dart wrapper for that if desired).
-
 import 'dart:async';
-import 'dart:html' show window;
-import 'dart:js_util' as js_util;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
+@JS('TPDirect')
+external JSObject? get _tpDirect;
 
 class FlutterTappaySdkWebImpl {
-  /// Call TPDirect.card.getPrime (with cardholder info).
-  /// [cardholder] is a Dart Map mapped to the expected JS structure by TapPay.
-  ///
-  /// Returns a Dart Map with the returned JS object (status/msg/prime/card_info etc).
-  Future<Map<String, dynamic>?> getPrimeWithCardholder(Map<String, dynamic> cardholder) async {
-    final dynamic tpDirect = js_util.getProperty(window, 'TPDirect');
-    if (tpDirect == null) {
-      throw StateError('TPDirect is not available on window. Make sure TapPay JS SDK is loaded.');
+  JSObject get _sdk {
+    final sdk = _tpDirect;
+    if (sdk == null) {
+      throw StateError(
+        'TPDirect is not available. Add the TapPay web SDK script before using '
+        'flutter_tappay_sdk on web.',
+      );
     }
+    return sdk;
+  }
 
-    final dynamic cardObj = js_util.getProperty(tpDirect, 'card');
-    if (cardObj == null) {
-      throw StateError('TPDirect.card is not available.');
-    }
+  Future<void> setupSDK({
+    required int appId,
+    required String appKey,
+    required String serverType,
+  }) async {
+    _sdk.callMethod<JSAny?>(
+      'setupSDK'.toJS,
+      appId.toJS,
+      appKey.toJS,
+      serverType.toJS,
+    );
+  }
 
-    // Convert Dart map into JS-compatible object
-    final dynamic jsCardholder = js_util.jsify(cardholder);
+  Future<String?> sdkVersion() async {
+    final version = _sdk.getProperty<JSAny?>('version'.toJS)?.dartify();
+    return version?.toString();
+  }
 
-    // The JS API is TPDirect.card.getPrime(cardholder, callback)
-    // but newer SDKs expose getPrime returning a Promise. We try to call getPrime
-    // and treat the return value as a Promise if possible.
-    try {
-      final dynamic promiseOrResult = js_util.callMethod(cardObj, 'getPrime', [jsCardholder]);
-      // Convert Promise -> Future
-      final dynamic result = await js_util.promiseToFuture(promiseOrResult);
-      // Convert JS object into Dart object
-      final dartified = js_util.dartify(result);
-      if (dartified is Map) {
-        return Map<String, dynamic>.from(dartified);
-      } else {
-        // Unexpected shape, return as map with single value
-        return {'result': dartified};
+  Future<String> getDeviceId() async {
+    final result = _sdk.callMethod<JSAny?>('getDeviceId'.toJS)?.dartify();
+    return result?.toString() ?? '';
+  }
+
+  Future<Map<String, dynamic>> getTappayFieldsStatus() async {
+    final card = _sdk.getProperty<JSObject>('card'.toJS);
+    final result =
+        card.callMethod<JSAny?>('getTappayFieldsStatus'.toJS)?.dartify();
+    return _asStringMap(result);
+  }
+
+  Future<Map<String, dynamic>> getPrime() {
+    final card = _sdk.getProperty<JSObject>('card'.toJS);
+    return _callbackResult((callback) {
+      card.callMethod<JSAny?>('getPrime'.toJS, callback);
+    });
+  }
+
+  Future<Map<String, dynamic>> getCardholderPrime() {
+    final cardholder = _sdk.getProperty<JSObject>('cardholder'.toJS);
+    return _errorFirstCallbackResult((callback) {
+      cardholder.callMethod<JSAny?>('getPrime'.toJS, callback);
+    });
+  }
+
+  Future<Map<String, dynamic>> _callbackResult(
+    void Function(JSFunction callback) invoke,
+  ) {
+    final completer = Completer<Map<String, dynamic>>();
+
+    final callback = ((JSAny? result) {
+      if (!completer.isCompleted) {
+        completer.complete(_asStringMap(result?.dartify()));
       }
-    } catch (e) {
-      rethrow;
+    }).toJS;
+
+    invoke(callback);
+    return completer.future;
+  }
+
+  Future<Map<String, dynamic>> _errorFirstCallbackResult(
+    void Function(JSFunction callback) invoke,
+  ) {
+    final completer = Completer<Map<String, dynamic>>();
+
+    final callback = ((JSAny? error, JSAny? result) {
+      if (completer.isCompleted) {
+        return;
+      }
+
+      if (error != null) {
+        final errorMap = _asStringMap(error.dartify());
+        if (errorMap.isNotEmpty) {
+          completer.complete({
+            'success': false,
+            ...errorMap,
+          });
+          return;
+        }
+      }
+
+      completer.complete(_asStringMap(result?.dartify()));
+    }).toJS;
+
+    invoke(callback);
+    return completer.future;
+  }
+
+  Map<String, dynamic> _asStringMap(Object? value) {
+    if (value is Map) {
+      return value.map((key, value) => MapEntry(key.toString(), value));
     }
+    return <String, dynamic>{};
   }
 }

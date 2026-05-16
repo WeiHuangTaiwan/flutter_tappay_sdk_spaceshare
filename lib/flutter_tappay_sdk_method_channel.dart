@@ -1,6 +1,4 @@
 // lib/flutter_tappay_sdk_method_channel.dart
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -12,7 +10,6 @@ import 'tappay/auth_methods.dart';
 import 'tappay/card_type.dart';
 import 'tappay/cart_item.dart';
 
-import 'models/tappay_cardholder.dart';
 import 'models/cardholder_prime_result.dart';
 
 /// An implementation of [FlutterTapPaySdkPlatform] that uses method channels.
@@ -20,6 +17,11 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('flutter_tappay_sdk');
+
+  bool get _isAndroid =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   Future<String?> get tapPaySdkVersion async {
@@ -114,7 +116,7 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
     bool? isEmailRequired = false,
     bool? isBillingAddressRequired = false,
   }) async {
-    if (Platform.isAndroid == false) {
+    if (!_isAndroid) {
       return TapPaySdkCommonResult(
           success: false,
           message: "Google Pay is only available on Android devices.");
@@ -155,7 +157,7 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
     required double price,
     required String currencyCode,
   }) async {
-    if (Platform.isAndroid == false) {
+    if (!_isAndroid) {
       return TapPayPrime(
           success: false,
           message: "Google Pay is only available on Android devices.");
@@ -187,7 +189,7 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
     bool? isEmailRequired = false,
     bool? isBillingAddressRequired = false,
   }) async {
-    if (Platform.isIOS == false) {
+    if (!_isIOS) {
       return TapPaySdkCommonResult(
           success: false,
           message: "Apple Pay is only available on iOS devices.");
@@ -225,7 +227,7 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
     required String currencyCode,
     required String countryCode,
   }) async {
-    if (Platform.isIOS == false) {
+    if (!_isIOS) {
       return TapPayPrime(
           success: false,
           message: "Apple Pay is only available on iOS devices.");
@@ -266,7 +268,7 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
 
   @override
   Future<TapPaySdkCommonResult?> applePayResult({required bool result}) async {
-    if (Platform.isIOS == false) {
+    if (!_isIOS) {
       return TapPaySdkCommonResult(
           success: false,
           message: "Apple Pay is only available on iOS devices.");
@@ -291,8 +293,8 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
   /// New: request web/native to return prime + cardholder info (if available)
   @override
   Future<CardholderPrimeResult?> getCardholderInfoPrime() async {
-    final result =
-        await methodChannel.invokeMethod<Map<Object?, Object?>>('getCardholderInfoPrime');
+    final result = await methodChannel
+        .invokeMethod<Map<Object?, Object?>>('getCardholderInfoPrime');
 
     if (result == null) {
       return CardholderPrimeResult(success: false);
@@ -308,16 +310,22 @@ class MethodChannelFlutterTapPaySdk extends FlutterTapPaySdkPlatform {
     required String appKey,
     required String serverType,
   }) {
-    throw UnimplementedError('setupSDK() is only available on web implementation.');
+    throw UnimplementedError(
+      'setupSDK() is only available on web implementation.',
+    );
   }
 
   @override
   Future<String> getDeviceId() {
-    throw UnimplementedError('getDeviceId() is only available on web implementation.');
+    throw UnimplementedError(
+      'getDeviceId() is only available on web implementation.',
+    );
   }
 
   @override
   Future<String> getPrime() {
-    throw UnimplementedError('getPrime() is only available on web implementation.');
+    throw UnimplementedError(
+      'getPrime() is only available on web implementation.',
+    );
   }
 }

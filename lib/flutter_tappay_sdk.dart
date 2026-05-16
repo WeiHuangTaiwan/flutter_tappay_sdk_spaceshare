@@ -95,8 +95,10 @@ class FlutterTapPaySdk {
     required String dueMonth,
     required String dueYear,
     required String cvv,
+
     /// true for sandbox/testing, false for production
     bool isSandbox = false,
+
     /// Optional: 若想同時送持卡人資訊（native / web），傳入 TapPayCardholder
     TapPayCardholder? cardholder,
   }) {
@@ -257,9 +259,6 @@ class FlutterTapPaySdk {
   /// Call TPDirect.card.getPrime() in Web
   static Future<String> getWebPrime() async {
     final prime = await FlutterTapPaySdkPlatform.instance.getPrime();
-    if (prime == null) {
-      throw Exception('getWebPrime failed: prime is null');
-    }
     return prime;
   }
 
@@ -303,7 +302,8 @@ class FlutterTapPaySdk {
         throw Exception('TapPay init failed: ${initRes?.message}');
       }
       // 確保卡號資訊都有傳入
-      if ([cardNumber, dueMonth, dueYear, cvv].any((e) => e == null || e.isEmpty)) {
+      if ([cardNumber, dueMonth, dueYear, cvv]
+          .any((e) => e == null || e.isEmpty)) {
         throw Exception('Missing card info for native platform');
       }
       final primeRes = await FlutterTapPaySdkPlatform.instance.getCardPrime(
@@ -317,10 +317,10 @@ class FlutterTapPaySdk {
         throw Exception('getCardPrime failed: ${primeRes?.message}');
       }
       final prime = primeRes?.prime;
-if (prime == null || prime.isEmpty) {
-  throw Exception('getCardPrime failed: prime is null');
-}
-return prime;
+      if (prime == null || prime.isEmpty) {
+        throw Exception('getCardPrime failed: prime is null');
+      }
+      return prime;
     }
   }
 
@@ -350,11 +350,15 @@ return prime;
       );
       if (initRes?.success != true) {
         // 回傳一個失敗的結果
-        return CardholderPrimeResult(success: false, message: initRes?.message);
+        return CardholderPrimeResult(
+          success: false,
+          message: initRes?.message,
+        );
       }
 
       // 呼叫 native 平台去產生 prime 並讀取 cardholder info（native 端需實作該方法）
-      final res = await FlutterTapPaySdkPlatform.instance.getCardholderInfoPrime();
+      final res =
+          await FlutterTapPaySdkPlatform.instance.getCardholderInfoPrime();
       return res;
     }
   }

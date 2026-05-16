@@ -1,88 +1,80 @@
-# Flutter TapPay SDK
+# SpaceShareTappy
 
-This project is a Flutter SDK for [TapPay](https://www.tappaysdk.com/), a popular payment gateway from Taiwan.
+SpaceShareTappy is a community Flutter wrapper for TapPay. It keeps one Dart API
+for Flutter apps and routes the actual payment-token work to the platform that is
+running the app:
 
-**Warning:** This is not an official SDK maintained by TapPay. Since TapPay does not provide an official SDK for Flutter, this project is created to wrap TapPay's official SDK.
+- Android: TapPay Android SDK through `MethodChannel`
+- iOS: TapPay iOS SDK through `MethodChannel`
+- Web: TapPay JavaScript SDK through Flutter web plugin registration
+
+This package is not an official TapPay SDK. It is published by SpaceShare for
+teams that need a practical cross-platform starting point while TapPay's official
+examples remain platform-specific.
 
 ## Features
 
-- DirectPay (Get the payment card's prime)
-- Apple Pay (Get the prime)
-- Google Pay (Get the prime)
+- Direct Pay card prime on Android and iOS
+- TapPay Fields prime on Web
+- Cardholder prime bridge for Web
+- Apple Pay bridge for iOS
+- Google Pay bridge for Android
 
-## Getting Started
-
-### Android
-
-- In your project's android folder, find AndroidManifest.xml and add the following attributes to the application tag
-
-  ```xml
-  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:tools="http://schemas.android.com/tools" --> Don't forget this line
-      >
-    ...
-    <application
-        android:label="flutter_tappay_sdk_example"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        tools:replace="android:label" --> Add this line
-        ...>
-    ...
-  ```
-
-2. (Optional. Required if you need to use Google Pay.) In your project's android folder, change the MainActivity's parent class from FlutterActivity to FlutterFragmentActivity
-
-   ```kotlin
-   import io.flutter.embedding.android.FlutterFragmentActivity
-
-   class MainActivity: FlutterFragmentActivity() {
-       // ...
-   }
-   ```
-
-### iOS
-
-(Required if you need to use Apple Pay.) Open Xcode and open your project's Runner.xcworkspace file. In the Signing & Capabilities tab, add the Apple Pay capability. And don't forget to add the Apple Pay merchant ID in the capability.
-
-### Dart / Flutter Project
-
-Add the following to your `pubspec.yaml` file:
+## Install
 
 ```yaml
 dependencies:
-  flutter_tappay_sdk: ^0.3.0
+  flutter_tappay_sdk:
+    git:
+      url: https://github.com/WeiHuangTaiwan/SpaceShareTappy.git
 ```
 
-## Usage
+## Web Setup
 
-### DirectPay
+Add TapPay's web SDK before Flutter starts, usually in `web/index.html`.
+
+```html
+<script src="https://js.tappaysdk.com/sdk/tpdirect/v5.24.0"></script>
+```
+
+TapPay Fields must still be configured in the page with TapPay-hosted DOM
+elements before calling `getWebPrime()` or `getCardPrime()` on web.
+
+## Basic Usage
 
 ```dart
 import 'package:flutter_tappay_sdk/flutter_tappay_sdk.dart';
 
-// ...
+final tappay = FlutterTapPaySdk();
 
-final tappay = FlutterTappaySdk();
-tappay.init(
-  appId: 'your app id',
-  appKey: 'your app key',
-  serverType: ServerType.sandbox, // or ServerType.production
+await tappay.initTapPay(
+  appId: 12345,
+  appKey: 'app_key',
+  isSandbox: true,
 );
-
-// ...
 
 final result = await tappay.getCardPrime(
   cardNumber: '4242424242424242',
-  dueMonth: '01',
-  dueYear: '23',
+  dueMonth: '12',
+  dueYear: '30',
   cvv: '123',
+  isSandbox: true,
 );
 
-if (result?.success) {
+if (result?.success == true) {
   print(result?.prime);
 } else {
   print(result?.message);
 }
 ```
 
-More examples can be found in the [example](example) folder.
+## Platform Notes
+
+Android Google Pay requires the host app's `MainActivity` to extend
+`FlutterFragmentActivity`.
+
+iOS Apple Pay requires the host app to enable the Apple Pay capability and add
+the merchant ID in Xcode.
+
+Web card input should use TapPay Fields so the Flutter app does not handle raw
+card data directly in browser code.

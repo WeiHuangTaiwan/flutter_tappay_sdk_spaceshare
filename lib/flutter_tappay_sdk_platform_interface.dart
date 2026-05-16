@@ -9,7 +9,6 @@ import 'models/tappay_sdk_common_result.dart';
 import 'tappay/auth_methods.dart';
 import 'tappay/cart_item.dart';
 
-import 'models/tappay_cardholder.dart';
 import 'models/cardholder_prime_result.dart';
 
 /// The interface that implementations of flutter_tappay_sdk must implement.
@@ -51,8 +50,10 @@ abstract class FlutterTapPaySdkPlatform extends PlatformInterface {
     required String dueMonth,
     required String dueYear,
     required String cvv,
+
     /// 新增 sandbox 標記：true 用測試環境，false 用正式環境
     bool isSandbox = false,
+
     /// 可選的持卡人資訊（若要隨 prime 一併送出）
     Map<String, dynamic>? cardholder,
   });
@@ -118,6 +119,8 @@ abstract class FlutterTapPaySdkPlatform extends PlatformInterface {
 
   /// New: obtain prime together with cardholder info (if available) from SDK (Web/native)
   Future<CardholderPrimeResult?> getCardholderInfoPrime() {
-    throw UnimplementedError('getCardholderInfoPrime() has not been implemented.');
+    throw UnimplementedError(
+      'getCardholderInfoPrime() has not been implemented.',
+    );
   }
 }

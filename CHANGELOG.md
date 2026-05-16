@@ -1,3 +1,10 @@
+## 0.3.1
+
+- chore: Rebrand README for SpaceShareTappy.
+- fix: Make the web implementation compile with Flutter web registration.
+- fix: Add cross-platform guards without importing `dart:io` into web builds.
+- test: Restore package tests with method-channel coverage.
+
 ## 0.3.0
 
 - fix: Resolve compilation issues by adding TPDirect.xcframework and TPDirectResource to flutter_tappay_sdk.podspec
