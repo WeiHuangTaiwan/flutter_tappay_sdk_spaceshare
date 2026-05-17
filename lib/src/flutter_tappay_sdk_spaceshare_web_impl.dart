@@ -54,37 +54,37 @@ class FlutterTappaySdkWebImpl {
     });
   }
   Future<Map<String, dynamic>> getPrimeByCardInfo({
-  required String cardNumber,
-  required String dueMonth,
-  required String dueYear,
-  required String cvv,
-}) {
-  final card = _sdk.getProperty<JSObject>('card'.toJS);
+    required String cardNumber,
+    required String dueMonth,
+    required String dueYear,
+    required String cvv,
+  }) {
+    final card = _sdk.getProperty<JSObject>('card'.toJS);
 
-  final cardInfo = <String, dynamic>{
-    // TapPay Web SDK raw-card key names.
-    // If TapPay returns invalid-parameter, verify these names against the
-    // exact TPDirect web SDK version you load in FlutterFlow Web.
-    'cardNumber': cardNumber,
-    'dueMonth': dueMonth,
-    'dueYear': dueYear,
-    'ccv': cvv,
+    final cardInfo = <String, dynamic>{
+      // TapPay Web SDK raw-card key names.
+      // If TapPay returns invalid-parameter, verify these names against the
+      // exact TPDirect web SDK version you load in FlutterFlow Web.
+      'cardNumber': cardNumber,
+      'dueMonth': dueMonth,
+      'dueYear': dueYear,
+      'ccv': cvv,
 
-    // Also include common alternative names for compatibility.
-    'cardnumber': cardNumber,
-    'expirationMonth': dueMonth,
-    'expirationYear': dueYear,
-    'cvv': cvv,
-  }.jsify() as JSObject;
+      // Also include common alternative names for compatibility.
+      'cardnumber': cardNumber,
+      'expirationMonth': dueMonth,
+      'expirationYear': dueYear,
+      'cvv': cvv,
+    }.jsify() as JSObject;
 
-  return _callbackResult((callback) {
-    card.callMethod<JSAny?>(
-      'getPrime'.toJS,
-      cardInfo,
-      callback,
-    );
-  });
-}
+    return _callbackResult((callback) {
+      card.callMethod<JSAny?>(
+        'getPrime'.toJS,
+        cardInfo,
+        callback,
+      );
+    });
+  }
 
   Future<Map<String, dynamic>> getCardholderPrime() {
     final cardholder = _sdk.getProperty<JSObject>('cardholder'.toJS);
