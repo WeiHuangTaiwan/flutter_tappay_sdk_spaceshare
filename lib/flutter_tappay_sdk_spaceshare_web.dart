@@ -56,22 +56,35 @@ class FlutterTapPaySdkWeb extends FlutterTapPaySdkPlatform {
     return status?['canGetPrime'] == true;
   }
 
-  @override
-  Future<TapPayPrime?> getCardPrime({
-    required String cardNumber,
-    required String dueMonth,
-    required String dueYear,
-    required String cvv,
-    bool isSandbox = false,
-    Map<String, dynamic>? cardholder,
-  }) async {
-    try {
-      final result = await _impl.getPrime();
-      return _tapPayPrimeFromWebResult(result);
-    } catch (e) {
-      return TapPayPrime(success: false, message: e.toString());
-    }
+@override
+Future<TapPayPrime?> getCardPrime({
+  required String cardNumber,
+  required String dueMonth,
+  required String dueYear,
+  required String cvv,
+  bool isSandbox = false,
+  Map<String, dynamic>? cardholder,
+}) async {
+  try {
+    final hasRawCardInfo = cardNumber.trim().isNotEmpty &&
+        dueMonth.trim().isNotEmpty &&
+        dueYear.trim().isNotEmpty &&
+        cvv.trim().isNotEmpty;
+
+    final result = hasRawCardInfo
+        ? await _impl.getPrimeByCardInfo(
+            cardNumber: cardNumber.trim(),
+            dueMonth: dueMonth.trim(),
+            dueYear: dueYear.trim(),
+            cvv: cvv.trim(),
+          )
+        : await _impl.getPrime();
+
+    return _tapPayPrimeFromWebResult(result);
+  } catch (e) {
+    return TapPayPrime(success: false, message: e.toString());
   }
+}
 
   @override
   Future<TapPaySdkCommonResult?> initGooglePay({
