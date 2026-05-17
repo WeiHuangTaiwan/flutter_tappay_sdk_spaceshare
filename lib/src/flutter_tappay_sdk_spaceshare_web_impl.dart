@@ -53,6 +53,7 @@ class FlutterTappaySdkWebImpl {
       card.callMethod<JSAny?>('getPrime'.toJS, callback);
     });
   }
+  
   Future<Map<String, dynamic>> getPrimeByCardInfo({
     required String cardNumber,
     required String dueMonth,
