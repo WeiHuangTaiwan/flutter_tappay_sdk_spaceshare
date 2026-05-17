@@ -282,15 +282,39 @@ class FlutterTapPaySdk {
     String? dueYear,
     String? cvv,
   }) async {
-    if (kIsWeb) {
-      // Web 流程
-      await setupWebSDK(
-        appId: appId,
-        appKey: appKey,
-        serverType: isSandbox ? 'sandbox' : 'production',
-      );
-      return await getWebPrime();
-    } else {
+if (kIsWeb) {
+  await setupWebSDK(
+    appId: appId,
+    appKey: appKey,
+    serverType: isSandbox ? 'sandbox' : 'production',
+  );
+
+  final hasRawCardInfo = [cardNumber, dueMonth, dueYear, cvv]
+      .every((value) => value != null && value.trim().isNotEmpty);
+
+  if (!hasRawCardInfo) {
+    return await getWebPrime();
+  }
+
+  final primeRes = await FlutterTapPaySdkPlatform.instance.getCardPrime(
+    cardNumber: cardNumber!.trim(),
+    dueMonth: dueMonth!.trim(),
+    dueYear: dueYear!.trim(),
+    cvv: cvv!.trim(),
+    isSandbox: isSandbox,
+  );
+
+  if (primeRes?.success != true) {
+    throw Exception('getCardPrime failed: ${primeRes?.message}');
+  }
+
+  final prime = primeRes?.prime;
+  if (prime == null || prime.isEmpty) {
+    throw Exception('getCardPrime failed: prime is null');
+  }
+
+  return prime;
+} else {
       // Native 流程
       final initRes = await FlutterTapPaySdkPlatform.instance.initTapPay(
         appId: appId,
