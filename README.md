@@ -8,7 +8,7 @@ running the app:
 - iOS: TapPay iOS SDK through `MethodChannel`
 - Web: TapPay JavaScript SDK through Flutter web plugin registration
 
-This package is not an official TapPay SDK. It is published by SpaceShare for
+This package is not an official TapPay SDK. It is published by SpaceShare Limited. for
 teams that need a practical cross-platform starting point while TapPay's official
 examples remain platform-specific.
 
@@ -78,3 +78,5 @@ the merchant ID in Xcode.
 
 Web card input should use TapPay Fields so the Flutter app does not handle raw
 card data directly in browser code.
+
+.share 
