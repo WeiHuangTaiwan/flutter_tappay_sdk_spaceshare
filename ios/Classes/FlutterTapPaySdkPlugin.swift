@@ -17,7 +17,7 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
     case "sdkVersion":
       // NOTE: If your TPDirect SDK provides a different API for fetching the SDK version,
       // replace this call with that API. Some TPDirect versions do not expose getVersion().
-      result(TPDSetup.getVersion())
+      result(TPDSetup.version())
 
     case "initPayment":
       let appId = args?["appId"] as? Int
@@ -92,9 +92,9 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
     // the commonly-seen initialization API (initInstance with server type enum).
     // If your TPDirect version uses a different initializer or enum naming, replace
     // the call below with the correct API (or pin the TPDirect pod to a compatible version).
-    let serverType: TPDServerType = isSandbox ? .sandbox : .production
+    let serverType: TPDServerType = isSandbox ? .sandBox : .production
     // TPDSetup init
-    TPDSetup.initInstance(withAppId: Int32(appId), withAppKey: appKey, with: serverType)
+    TPDSetup.setWithAppId(Int32(appId), withAppKey: appKey, withServerType: serverType)
 
     onResult(["success": true, "message": nil])
   }
@@ -147,5 +147,6 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
         let res = CreateCardTokenByCardInfoResult(success: false, status: status, message: message, prime: nil)
         onResult(res.toDictionary())
       })
+      .getPrime()
   }
 }
