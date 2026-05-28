@@ -94,7 +94,7 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
     // the call below with the correct API (or pin the TPDirect pod to a compatible version).
     let serverType: TPDServerType = isSandbox ? .sandBox : .production
     // TPDSetup init
-    TPDSetup.setWithAppId(Int32(appId), withAppKey: appKey, withServerType: serverType)
+    TPDSetup.setWithAppId(Int32(appId), withAppKey: appKey, with: serverType)
 
     onResult(["success": true, "message": nil])
   }
