@@ -1,24 +1,23 @@
-// // This is a basic Flutter integration test.
-// //
-// // Since integration tests run in a full Flutter application, they can interact
-// // with the host side of a plugin implementation, unlike Dart unit tests.
-// //
-// // For more information about Flutter integration tests, please see
-// // https://docs.flutter.dev/cookbook/testing/integration/introduction
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_tappay_sdk_spaceshare_example/main.dart';
+import 'package:integration_test/integration_test.dart';
 
-// import 'package:flutter_test/flutter_test.dart';
-// import 'package:integration_test/integration_test.dart';
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-// import 'package:flutter_tappay_sdk_spaceshare/flutter_tappay_sdk_spaceshare.dart';
+  testWidgets('example starts with placeholder credential notice',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
 
-// void main() {
-//   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
-//   testWidgets('getPlatformVersion test', (WidgetTester tester) async {
-//     final FlutterTapPaySdk plugin = FlutterTapPaySdk();
-//     final String? version = await plugin.getPlatformVersion();
-//     // The version string depends on the host platform running the test, so
-//     // just assert that some non-empty string is returned.
-//     expect(version?.isNotEmpty, true);
-//   });
-// }
+    expect(
+      find.byWidgetPredicate(
+        (Widget widget) =>
+            widget is Text &&
+            widget.data != null &&
+            widget.data!.contains('TapPay credentials are placeholders'),
+      ),
+      findsOneWidget,
+    );
+  });
+}

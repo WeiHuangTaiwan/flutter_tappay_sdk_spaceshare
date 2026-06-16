@@ -1,16 +1,48 @@
 # flutter_tappay_sdk_spaceshare_example
 
-Demonstrates how to use the flutter_tappay_sdk_spaceshare plugin.
+This example demonstrates the plugin API paths that are currently wired in the
+package implementation.
 
-## Getting Started
+## What This Example Covers
 
-This project is a starting point for a Flutter application.
+- TapPay SDK initialization through `FlutterTapPaySdk.initTapPay`.
+- Native card prime creation through `FlutterTapPaySdk.getCardPrime`.
+- Android Google Pay through `initGooglePay` and `requestGooglePay`.
 
-A few resources to get you started if this is your first Flutter project:
+## Credentials
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+The app is intentionally non-runnable by default. Update
+`example/lib/constants.dart` with real TapPay sandbox credentials before using
+payment calls:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `kTapPayAppId`
+- `kTapPayAppKey`
+
+The example refuses to initialize TapPay while these values are placeholders.
+
+The sample card expiry uses a future two-digit year. Before running the example,
+verify that the expiry date is still in the future for the TapPay sandbox card
+you are using. Do not rely on a fixed sample year forever.
+
+## Platform Notes
+
+Android Google Pay requires the example `MainActivity` to extend
+`FlutterFragmentActivity`, which this example already does.
+
+Apple Pay is shown as unavailable in this example. The public Dart API exists,
+but the current iOS method-channel implementation does not wire the Apple Pay
+calls through to `ApplePayHandler`.
+
+Web-specific APIs are not demonstrated here because this example does not
+include an `example/web/` host page. A web app must load TapPay JS before using
+`setupWebSDK`, `getWebPrime`, `getWebDeviceId`, or web prime flows.
+
+## Validation
+
+From the repository root:
+
+```sh
+flutter analyze
+flutter test
+cd example && flutter test
+```
