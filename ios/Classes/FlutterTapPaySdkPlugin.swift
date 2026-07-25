@@ -128,10 +128,10 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
     //                         countryCode: ch["phone_number_country_code"] as? String)
     // }
 
-    // Use TapPay iOS SDK to set card and generate prime.
-    // The onSuccess/onFailure signatures vary between SDK versions; here we use a
-    // 4-argument success callback and (Int, String) failure callback which matches
-    // recent SDK expectations.
+    // This is the direct card-info flow, not the TPDForm flow. TapPay's getPrime()
+    // requires a TPDCard created with TPDCard.setup(tpdForm) and rejects this
+    // setWithCardNumber path with status 88011. The direct flow must finish with
+    // createToken(withGeoLocation:) instead.
     TPDCard.setWithCardNumber(cardNumber, withDueMonth: expiryMonth, withDueYear: expiryYear, withCCV: cvv)
       .onSuccessCallback({ (prime: String?, cardInfo: TPDCardInfo?, someString: String?, extraInfo: [AnyHashable: Any]?) in
         var result = CreateCardTokenByCardInfoResult(success: true, status: nil, message: nil, prime: prime).toDictionary()
@@ -147,6 +147,6 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
         let res = CreateCardTokenByCardInfoResult(success: false, status: status, message: message, prime: nil)
         onResult(res.toDictionary())
       })
-      .getPrime()
+      .createToken(withGeoLocation: "UNKNOWN")
   }
 }
