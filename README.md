@@ -37,8 +37,40 @@ Add TapPay's web SDK before Flutter starts, usually in `web/index.html`.
 <script src="https://js.tappaysdk.com/sdk/tpdirect/v5.24.0"></script>
 ```
 
-TapPay Fields must still be configured in the page with TapPay-hosted DOM
-elements before calling `getWebPrime()` or `getCardPrime()` on web.
+When calling `getWebPrime()` directly, configure TapPay Fields in the page
+first. The view below can mount and configure them for you.
+
+### Flutter Web hosted fields view
+
+`TapPayWebFieldsView` mounts the three TapPay-hosted card fields inside a
+`HtmlElementView`, loads the pinned TapPay Web SDK, and reports whether the
+fields and cardholder name are ready. The parent owns its button and calls the
+controller only after a user confirms payment:
+
+```dart
+import 'package:flutter_tappay_sdk_spaceshare/tappay_web_fields.dart';
+
+final fields = TapPayWebFieldsController();
+
+TapPayWebFieldsView(
+  controller: fields,
+  appId: appId,
+  appKey: appKey,
+  isSandbox: true,
+  localeCode: 'zh_Hant',
+  onValidityChanged: (valid) => setState(() => canSubmit = valid),
+);
+
+// Inside the parent's confirm button handler:
+final result = await fields.getPrime();
+await yourServerCheckout(result.prime, result.cardholderName);
+```
+
+The result contains no raw card number, expiration date, or CVC. Send the
+one-time prime to your trusted backend promptly; keep the TapPay partner key
+and Pay by Prime call there. `TPDirect.card` is a singleton, so mount one active
+fields view at a time. On Android and iOS the view is a non-card-entry
+placeholder until a native hosted-field implementation is added.
 
 ## Basic Usage
 
