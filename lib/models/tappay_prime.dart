@@ -66,7 +66,7 @@ class TapPayPrime {
 
   @override
   String toString() {
-    return 'TapPayPrime(success: $success, status: $status, message: $message, prime: $prime)';
+    return 'TapPayPrime(success: $success, status: $status, message: $message, prime: [redacted])';
   }
 
   @override

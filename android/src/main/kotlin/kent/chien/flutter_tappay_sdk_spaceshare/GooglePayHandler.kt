@@ -296,7 +296,7 @@ class GooglePayHandler(
   private fun requestGooglePayPayment(paymentData: PaymentData) {
     val successCallback =
       TPDGooglePayGetPrimeSuccessCallback { prime, _, _ ->
-        Log.d("GooglePayHandler", "prime: $prime")
+        Log.d("GooglePayHandler", "Google Pay prime generated")
         googlePayPaymentCallback?.onGooglePayResult(
           GooglePayPaymentResult(
             true,
