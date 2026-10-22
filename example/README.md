@@ -29,9 +29,12 @@ you are using. Do not rely on a fixed sample year forever.
 Android Google Pay requires the example `MainActivity` to extend
 `FlutterFragmentActivity`, which this example already does.
 
-Apple Pay is shown as unavailable in this example. The public Dart API exists,
-but the current iOS method-channel implementation does not wire the Apple Pay
-calls through to `ApplePayHandler`.
+The iOS method channel wires `initApplePay`, `requestApplePay`, and
+`applePayResult` to `ApplePayHandler`. This example keeps Apple Pay disabled
+because it has no merchant ID, payment processing certificate, or Apple Pay
+capability. A host app must configure those before requesting a prime. After
+the prime arrives, complete Pay by Prime on a trusted server and call
+`applePayResult` with the server-confirmed outcome.
 
 Web-specific APIs are not demonstrated here because this example does not
 include an `example/web/` host page. A web app must load TapPay JS before using

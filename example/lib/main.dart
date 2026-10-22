@@ -161,9 +161,9 @@ class _MyAppState extends State<MyApp> {
               ),
             const ListTile(
               enabled: false,
-              title: Text('Apple Pay unavailable in this example'),
+              title: Text('Apple Pay needs host app setup'),
               subtitle: Text(
-                'The Dart API exists, but the current iOS method-channel implementation does not wire Apple Pay calls.',
+                'Enable the Apple Pay capability and configure a merchant ID and payment processing certificate before adding a payment flow.',
               ),
             ),
             if (kIsWeb)

@@ -19,6 +19,6 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Get Prime by Payment Card'), findsOneWidget);
-    expect(find.text('Apple Pay unavailable in this example'), findsOneWidget);
+    expect(find.text('Apple Pay needs host app setup'), findsOneWidget);
   });
 }

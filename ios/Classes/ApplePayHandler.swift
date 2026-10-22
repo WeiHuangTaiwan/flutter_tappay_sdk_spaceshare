@@ -6,6 +6,7 @@
 //
 
 import TPDirect
+import PassKit
 
 typealias ApplePayHandlerCheckCallback = (TapPaySdkCommonResult) -> Void
 
@@ -22,6 +23,12 @@ class ApplePayHandler: NSObject {
   private var isPaymentProcessing: Bool = false
   
   private var onApplePayResult: AppPayHandlerPaymentCallback?
+
+  private func finishRequest(_ response: ApplePayPaymentResult) {
+    guard let callback = onApplePayResult else { return }
+    onApplePayResult = nil
+    callback(response)
+  }
   
   func initApplePay(
     merchantId: String? = nil,
@@ -38,7 +45,7 @@ class ApplePayHandler: NSObject {
       return
     }
     
-    if (merchantId == nil || merchantName == nil) {
+    if (merchantId?.isEmpty != false || merchantName?.isEmpty != false) {
       onApplePayCheck?(TapPaySdkCommonResult(success: false, message: "Missing required parameters for \"initApplePay\" method."))
       return
     }
@@ -109,6 +116,7 @@ class ApplePayHandler: NSObject {
     }
     
     self.onApplePayResult = onApplePayResult
+    isPaymentProcessing = true
     
     // Setup country code and currency code
     merchant.countryCode = countryCode
@@ -116,8 +124,8 @@ class ApplePayHandler: NSObject {
     
     // Setup cart
     cart = TPDCart()
-    cart.isAmountPending = false
-    cart.isShowTotalAmount = true
+    cart.isAmountPending = isAmountPending ?? false
+    cart.isShowTotalAmount = isShowTotalAmount ?? true
     
     // Add payment items
     for item in items {
@@ -161,20 +169,25 @@ class ApplePayHandler: NSObject {
 extension ApplePayHandler : TPDApplePayDelegate {
   
   func tpdApplePay(_ applePay: TPDApplePay!, didReceivePrime prime: String!, withExpiryMillis expiryMillis: Int, with cardInfo: TPDCardInfo!, withMerchantReferenceInfo merchantReferenceInfo: [AnyHashable : Any]!) {
-    print("Apple Pay did receive prime: \(prime ?? "")")
-    onApplePayResult?(ApplePayPaymentResult(success: true, status: nil, message: "Apple Pay payment was successful.", prime: prime))
+    guard let prime = prime, !prime.isEmpty else {
+      finishRequest(ApplePayPaymentResult(success: false, status: nil, message: "Apple Pay did not return a prime.", prime: nil))
+      return
+    }
+    // The server still has to charge this prime with Pay by Prime.
+    finishRequest(ApplePayPaymentResult(success: true, status: nil, message: "Apple Pay prime generated.", prime: prime))
   }
   
   func tpdApplePay(_ applePay: TPDApplePay!, didSuccessPayment result: TPDTransactionResult!) {
-    print("Apple Pay did success payment: \(result.status)")
+    print("Apple Pay did success payment: \(result?.status ?? 0)")
   }
   
   func tpdApplePay(_ applePay: TPDApplePay!, didFailurePayment result: TPDTransactionResult!) {
-    print("Apple Pay did failure payment: \(result.status), message: \(result.message ?? "")")
+    print("Apple Pay did failure payment: \(result?.status ?? -1), message: \(result?.message ?? "")")
+    finishRequest(ApplePayPaymentResult(success: false, status: result?.status, message: result?.message, prime: nil))
   }
   
   func tpdApplePayDidCancelPayment(_ applePay: TPDApplePay!) {
-    onApplePayResult?(ApplePayPaymentResult(success: false, status: nil, message: "Apple Pay payment was canceled.", prime: nil))
+    finishRequest(ApplePayPaymentResult(success: false, status: nil, message: "Apple Pay payment was canceled.", prime: nil))
   }
   
   func tpdApplePayDidStartPayment(_ applePay: TPDApplePay!) {
@@ -185,7 +198,7 @@ extension ApplePayHandler : TPDApplePayDelegate {
   func tpdApplePayDidFinishPayment(_ applePay: TPDApplePay!) {
     print("Apple Pay did finish payment")
     isPaymentProcessing = false
-//    onApplePayResult = nil
+    finishRequest(ApplePayPaymentResult(success: false, status: nil, message: "Apple Pay finished without returning a prime.", prime: nil))
   }
   
 }

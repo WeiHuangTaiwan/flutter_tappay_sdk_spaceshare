@@ -105,8 +105,13 @@ if (result?.success == true) {
 Android Google Pay requires the host app's `MainActivity` to extend
 `FlutterFragmentActivity`.
 
-iOS Apple Pay requires the host app to enable the Apple Pay capability and add
-the merchant ID in Xcode.
+iOS Apple Pay requires the host app to enable the Apple Pay capability, add its
+merchant ID to the app entitlements, and complete the Payment Processing
+certificate setup in Apple Developer and TapPay Portal. TapPay Portal provides
+the CSR that Apple signs. Call `initPayment` before `initApplePay`, then
+`requestApplePay` to obtain a prime. Complete Pay by Prime on a trusted server
+and call `applePayResult` with the server-confirmed outcome so the payment sheet
+can show success or failure. See the [TapPay setup guide](https://docs.tappaysdk.com/apple-pay/en/portal.html).
 
 Web card input should use TapPay Fields so the Flutter app does not handle raw
 card data directly in browser code.

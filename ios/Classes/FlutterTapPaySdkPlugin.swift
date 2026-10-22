@@ -4,6 +4,8 @@ import UIKit
 import TPDirect
 
 public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
+  private let applePayHandler = ApplePayHandler()
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_tappay_sdk_spaceshare", binaryMessenger: registrar.messenger())
     let instance = FlutterTapPaySdkPlugin()
@@ -74,6 +76,38 @@ public class FlutterTapPaySdkPlugin: NSObject, FlutterPlugin {
         "message": "Google Pay is only available on Android."
       ]
       result(res)
+
+    case "initApplePay":
+      applePayHandler.initApplePay(
+        merchantId: args?["merchantId"] as? String,
+        merchantName: args?["merchantName"] as? String,
+        cardTypes: args?["cardTypes"] as? [String],
+        isConsumerNameRequired: args?["isConsumerNameRequired"] as? Bool,
+        isPhoneNumberRequired: args?["isPhoneNumberRequired"] as? Bool,
+        isBillingAddressRequired: args?["isBillingAddressRequired"] as? Bool,
+        isEmailRequired: args?["isEmailRequired"] as? Bool
+      ) { response in
+        result(response.toDictionary())
+      }
+
+    case "requestApplePay":
+      applePayHandler.requestApplePay(
+        cartItems: args?["cartItems"] as? [[String: Any]],
+        currencyCode: args?["currencyCode"] as? String,
+        countryCode: args?["countryCode"] as? String
+      ) { response in
+        result(response.toDictionary())
+      }
+
+    case "applePayResult":
+      guard let paymentSucceeded = args?["result"] as? Bool else {
+        result(TapPaySdkCommonResult(
+          success: false,
+          message: "Missing required result for applePayResult."
+        ).toDictionary())
+        return
+      }
+      result(applePayHandler.applePayResult(result: paymentSucceeded).toDictionary())
 
     default:
       result(FlutterMethodNotImplemented)
