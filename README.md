@@ -94,7 +94,7 @@ final result = await tappay.getCardPrime(
 );
 
 if (result?.success == true) {
-  print(result?.prime);
+  // Send result!.prime to your trusted backend promptly. Do not log it.
 } else {
   print(result?.message);
 }
@@ -115,5 +115,8 @@ can show success or failure. See the [TapPay setup guide](https://docs.tappaysdk
 
 Web card input should use TapPay Fields so the Flutter app does not handle raw
 card data directly in browser code.
+
+See [SpaceShare payment platform matrix](docs/payment-platform-matrix.md) for
+the wrapper's current capabilities and the app integration work still required.
 
 .share 
