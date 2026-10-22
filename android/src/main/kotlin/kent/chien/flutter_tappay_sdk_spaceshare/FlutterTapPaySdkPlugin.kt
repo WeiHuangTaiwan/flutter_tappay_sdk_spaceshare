@@ -44,16 +44,14 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
       googlePayHandler.setActivity(it)
     }
     binding.addActivityResultListener(googlePayHandler)
-    // If googlePayHandler needs permission callbacks, you can also add:
-    // binding.addRequestPermissionsResultListener(googlePayHandler)
+    binding.addRequestPermissionsResultListener(googlePayHandler)
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
     // remove previously registered listeners and clear activity/binding references
     try {
       activityPluginBinding?.removeActivityResultListener(googlePayHandler)
-      // If you registered request permissions listener, remove it similarly:
-      // activityPluginBinding?.removeRequestPermissionsResultListener(googlePayHandler)
+      activityPluginBinding?.removeRequestPermissionsResultListener(googlePayHandler)
     } catch (e: Exception) {
       // ignore if removal isn't supported in some older embedding versions
     }
@@ -68,13 +66,13 @@ class FlutterTapPaySdkPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
       googlePayHandler.setActivity(it)
     }
     binding.addActivityResultListener(googlePayHandler)
-    // binding.addRequestPermissionsResultListener(googlePayHandler)
+    binding.addRequestPermissionsResultListener(googlePayHandler)
   }
 
   override fun onDetachedFromActivity() {
     try {
       activityPluginBinding?.removeActivityResultListener(googlePayHandler)
-      // activityPluginBinding?.removeRequestPermissionsResultListener(googlePayHandler)
+      activityPluginBinding?.removeRequestPermissionsResultListener(googlePayHandler)
     } catch (e: Exception) {
     }
     activity = null

@@ -8,11 +8,63 @@ import 'models/tappay_sdk_common_result.dart';
 import 'tappay/auth_methods.dart';
 import 'tappay/card_type.dart';
 import 'tappay/cart_item.dart';
+import 'tappay/payment_capabilities.dart';
+
+export 'tappay/payment_capabilities.dart';
 
 import 'models/cardholder_prime_result.dart';
 import 'models/tappay_cardholder.dart';
 
 class FlutterTapPaySdk {
+  /// Platform support for card entry and wallet methods in this wrapper.
+  /// Wallet buttons additionally require a successful device availability
+  /// check, merchant setup, and a supported server payment flow.
+  TapPayPaymentCapabilities get paymentCapabilities =>
+      TapPayPaymentCapabilities.current();
+
+  /// Probe native wallet availability after initializing TapPay. A platform
+  /// match alone never makes a wallet button eligible for display.
+  Future<TapPayPaymentCapabilities> checkPaymentCapabilities({
+    String? appleMerchantId,
+    String? appleMerchantName,
+    String? googleMerchantName,
+  }) async {
+    final platform = paymentCapabilities.platform;
+    var appleAvailable = false;
+    var googleAvailable = false;
+    if (platform == TapPayRuntimePlatform.ios &&
+        (appleMerchantId ?? '').isNotEmpty &&
+        (appleMerchantName ?? '').isNotEmpty) {
+      try {
+        appleAvailable = (await initApplePay(
+              merchantId: appleMerchantId!,
+              merchantName: appleMerchantName!,
+            ))
+                ?.success ==
+            true;
+      } catch (_) {
+        appleAvailable = false;
+      }
+    }
+    if (platform == TapPayRuntimePlatform.android &&
+        (googleMerchantName ?? '').isNotEmpty) {
+      try {
+        googleAvailable = (await initGooglePay(
+              merchantName: googleMerchantName!,
+            ))
+                ?.success ==
+            true;
+      } catch (_) {
+        googleAvailable = false;
+      }
+    }
+    return TapPayPaymentCapabilities(
+      platform: platform,
+      applePayAvailable: appleAvailable,
+      googlePayAvailable: googleAvailable,
+    );
+  }
+
   /// To get the native SDK version
   ///
   /// This information is different from the Flutter plugin version.
@@ -282,39 +334,39 @@ class FlutterTapPaySdk {
     String? dueYear,
     String? cvv,
   }) async {
-  if (kIsWeb) {
-    await setupWebSDK(
-      appId: appId,
-      appKey: appKey,
-      serverType: isSandbox ? 'sandbox' : 'production',
-    );
+    if (kIsWeb) {
+      await setupWebSDK(
+        appId: appId,
+        appKey: appKey,
+        serverType: isSandbox ? 'sandbox' : 'production',
+      );
 
-    final hasRawCardInfo = [cardNumber, dueMonth, dueYear, cvv]
-        .every((value) => value != null && value.trim().isNotEmpty);
+      final hasRawCardInfo = [cardNumber, dueMonth, dueYear, cvv]
+          .every((value) => value != null && value.trim().isNotEmpty);
 
-    if (!hasRawCardInfo) {
-      return await getWebPrime();
-    }
+      if (!hasRawCardInfo) {
+        return await getWebPrime();
+      }
 
-    final primeRes = await FlutterTapPaySdkPlatform.instance.getCardPrime(
-      cardNumber: cardNumber!.trim(),
-      dueMonth: dueMonth!.trim(),
-      dueYear: dueYear!.trim(),
-      cvv: cvv!.trim(),
-      isSandbox: isSandbox,
-    );
+      final primeRes = await FlutterTapPaySdkPlatform.instance.getCardPrime(
+        cardNumber: cardNumber!.trim(),
+        dueMonth: dueMonth!.trim(),
+        dueYear: dueYear!.trim(),
+        cvv: cvv!.trim(),
+        isSandbox: isSandbox,
+      );
 
-    if (primeRes?.success != true) {
-      throw Exception('getCardPrime failed: ${primeRes?.message}');
-    }
+      if (primeRes?.success != true) {
+        throw Exception('getCardPrime failed: ${primeRes?.message}');
+      }
 
-    final prime = primeRes?.prime;
-    if (prime == null || prime.isEmpty) {
-      throw Exception('getCardPrime failed: prime is null');
-    }
+      final prime = primeRes?.prime;
+      if (prime == null || prime.isEmpty) {
+        throw Exception('getCardPrime failed: prime is null');
+      }
 
-    return prime;
-  } else {
+      return prime;
+    } else {
       // Native 流程
       final initRes = await FlutterTapPaySdkPlatform.instance.initTapPay(
         appId: appId,
